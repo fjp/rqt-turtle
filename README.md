@@ -1,6 +1,6 @@
-# ros-qt-turtle
+# rqt-turtle
 
-Qt Drawing GUI using ROS turtlesim
+rqt plugin for ROS rqt to draw in turtlesim using turtlebot.
 
 
 ## Dependencies
