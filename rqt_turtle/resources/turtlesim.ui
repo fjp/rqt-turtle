@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>528</width>
+    <height>352</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Turtlesim</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="2" column="0">
+    <widget class="QPushButton" name="pb_reset_2">
+     <property name="text">
+      <string>Spawn</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QPushButton" name="pb_reset">
+     <property name="text">
+      <string>Reset</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0" colspan="2">
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Turtles</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="1">
+       <widget class="QComboBox" name="cb_shape">
+        <item>
+         <property name="text">
+          <string>Rectangle</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Circle</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Square</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QPushButton" name="pb_draw_4">
+        <property name="text">
+         <string>Teleport Abs</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QPushButton" name="pb_draw_2">
+        <property name="text">
+         <string>Color</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QPushButton" name="pb_draw_3">
+        <property name="text">
+         <string>Kill</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="pb_draw">
+        <property name="text">
+         <string>Draw</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" rowspan="7">
+       <widget class="QListView" name="lv_turtles"/>
+      </item>
+      <item row="4" column="1">
+       <widget class="QPushButton" name="pb_draw_5">
+        <property name="text">
+         <string>Teleport Rel</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
