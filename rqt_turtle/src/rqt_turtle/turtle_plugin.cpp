@@ -25,7 +25,7 @@ namespace rqt_turtle {
         widget_ = new QWidget();
         // extend the widget with all attributes and children from UI file
         //ui_.setupUi(widget_);
-        ui_->setupUi(this)
+        ui_->setupUi(widget_);
         // add widget to the user interface
         context.addWidget(widget_);
     }
@@ -59,4 +59,7 @@ namespace rqt_turtle {
 
 } // namespace
 
-PLUGINLIB_DECLARE_CLASS(rqt_turtle, TurtlePlugin, rqt_turtle::TurtlePlugin, rqt_gui_cpp::Plugin)
+// Deprecated
+// See: http://wiki.ros.org/pluginlib#pluginlib.2Fpluginlib_groovy.Simplified_Export_Macro
+//PLUGINLIB_DECLARE_CLASS(rqt_turtle, TurtlePlugin, rqt_turtle::TurtlePlugin, rqt_gui_cpp::Plugin)
+PLUGINLIB_EXPORT_CLASS(rqt_turtle::TurtlePlugin, rqt_gui_cpp::Plugin)
