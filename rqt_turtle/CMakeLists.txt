@@ -15,6 +15,9 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+find_package(Qt5Widgets REQUIRED)
+
+
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -149,6 +152,53 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+
+# ensure generated header files are being created in the devel space
+#set(_cmake_current_binary_dir "${CMAKE_CURRENT_BINARY_DIR}")
+#set(CMAKE_CURRENT_BINARY_DIR "${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_INCLUDE_DESTINATION}")
+
+set(rqt_turtle_SRCS
+  src/rqt_turtle/turtle_plugin.cpp
+)
+
+set(rqt_turtle_HDRS
+  include/rqt_turtle/turtle_plugin.h
+)
+
+set(rqt_turtle_UIS
+  resources/turtle_plugin.ui
+)
+
+set(rqt_turtle_INCLUDE_DIRECTORIES
+  include
+  "${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_INCLUDE_DESTINATION}"
+)
+if(NOT EXISTS "${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_INCLUDE_DESTINATION}")
+  file(MAKE_DIRECTORY "${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_INCLUDE_DESTINATION}")
+endif()
+
+
+qt5_wrap_cpp(rqt_turtle_MOCS ${rqt_turtle_HDRS})
+
+# ensure generated header files are being created in the devel space
+set(_cmake_current_binary_dir "${CMAKE_CURRENT_BINARY_DIR}")
+set(CMAKE_CURRENT_BINARY_DIR "${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_INCLUDE_DESTINATION}")
+
+qt5_wrap_ui(rqt_turtle_UIS_H ${rqt_turtle_UIS})
+
+set(CMAKE_CURRENT_BINARY_DIR "${_cmake_current_binary_dir}")
+
+include_directories(${rqt_turtle_INCLUDE_DIRECTORIES} ${catkin_INCLUDE_DIRS})
+add_library(${PROJECT_NAME} ${rqt_turtle_SRCS} ${rqt_turtle_MOCS} ${rqt_turtle_UIS_H})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} Qt5::Widgets)
+
+message(${PROJECT_NAME})
+message(${rqt_turtle_UIS_H})
+
+
+# TODO use?
+#find_package(class_loader)
+#class_loader_hide_library_symbols(${PROJECT_NAME})
 
 #############
 ## Install ##
