@@ -1,0 +1,20 @@
+<library path="src">
+  <class name="Turtle Plugin" type="rqt_turtle::TurtlePlugin" base_class_type="rqt_gui_py::Plugin">
+    <description>
+      Plugin for ROS rqt to draw in turtlesim using turtlebot.
+    </description>
+    <qtgui>
+      <!-- optional grouping...
+      <group>
+        <label>Group</label>
+      </group>
+      <group>
+        <label>Subgroup</label>
+      </group>
+      -->
+      <label>Turtle Plugin</label>
+      <icon type="theme">system-help</icon>
+      <statustip>Plugin for ROS rqt to draw in turtlesim using turtlebot.</statustip>
+    </qtgui>
+  </class>
+</library>
