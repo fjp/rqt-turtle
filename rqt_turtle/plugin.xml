@@ -1,19 +1,19 @@
-<library path="src">
-  <class name="Turtle Plugin" type="rqt_turtle::TurtlePlugin" base_class_type="rqt_gui_py::Plugin">
+<!-- To make the plugin discoverable by rqt the path to the library librqt_turtle.so needs to be specified -->
+<!-- The installed plugin library can be found in the devel/lib/ folder. -->
+<library path="lib/librqt_turtle">
+  <class name="rqt_turtle/TurtlePlugin" type="rqt_turtle::TurtlePlugin" base_class_type="rqt_gui_cpp::Plugin">
     <description>
       Plugin for ROS rqt to draw in turtlesim using turtlebot.
     </description>
     <qtgui>
-      <!-- optional grouping...
+      <!-- group the plugin into the folder Robot Tools... -->
       <group>
-        <label>Group</label>
+        <label>Robot Tools</label>
+        <icon type="theme">folder</icon>
+        <statustip>Plugins related to robot tools.</statustip>
       </group>
-      <group>
-        <label>Subgroup</label>
-      </group>
-      -->
-      <label>Turtle Plugin</label>
-      <icon type="theme">system-help</icon>
+      <label>TurtleSim</label>
+      <icon type="theme">input-tablet</icon>
       <statustip>Plugin for ROS rqt to draw in turtlesim using turtlebot.</statustip>
     </qtgui>
   </class>
