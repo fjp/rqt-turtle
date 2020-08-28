@@ -11,7 +11,15 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rqt_gui
   rqt_gui_cpp
+  #rqt_topic
 )
+
+find_package(rqt_topic)
+
+message("FOUND rqt_topic" ${rqt_topic_FOUND})
+
+message("FOUND" ${rqt_topic_INCLUDES}/rqt_topic/resource)
+message("FOUND" ${rqt_topic_INCLUDE_DIRS}/rqt_topic/resource)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -52,12 +60,12 @@ catkin_python_setup()
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
+#catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES rqt_turtle
 #  CATKIN_DEPENDS roscpp rqt_gui rqt_gui_cpp
 #  DEPENDS system_lib
-)
+#)
 
 ###########
 ## Build ##
@@ -100,6 +108,11 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
+# WIP TODO remove here (only used for rqt_topic)
+include_directories(${catkin_INCLUDE_DIRS})
+message(${catkin_INCLUDE_DIRS})
+message(${rqt_topic_INCLUDE_DIRS})
+
 
 set(rqt_turtle_SRCS
   src/rqt_turtle/turtle_plugin.cpp
@@ -111,6 +124,8 @@ set(rqt_turtle_HDRS
 
 set(rqt_turtle_UIS
   resources/turtle_plugin.ui
+  ${rqt_topic_INCLUDE_DIRS}/resource/TopicWidget.ui
+#  ${CATKIN_INSTALL_PREFIX}/${CATKIN_GLOBAL_SHARE_DESTINATION}/rqt_topic/resource/TopicWidget.ui
 )
 
 set(rqt_turtle_INCLUDE_DIRECTORIES
