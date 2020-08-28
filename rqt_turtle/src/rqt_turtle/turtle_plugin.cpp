@@ -2,6 +2,10 @@
 #include <pluginlib/class_list_macros.h>
 #include <QStringList>
 
+#include <std_srvs/Empty.h>
+#include <turtlesim/Spawn.h>
+#include <ros/service.h>
+
 #include "ui_turtle_plugin.h"
 
 namespace rqt_turtle {
@@ -25,9 +29,13 @@ namespace rqt_turtle {
         widget_ = new QWidget();
         // extend the widget with all attributes and children from UI file
         //ui_.setupUi(widget_);
+        ROS_INFO("INIT");
         ui_->setupUi(widget_);
         // add widget to the user interface
         context.addWidget(widget_);
+
+        connect(ui_->btnReset, SIGNAL(clicked()), this, SLOT(on_btnReset_clicked()));
+        connect(ui_->btnSpawn, SIGNAL(clicked()), this, SLOT(on_btnSpawn_clicked()));
     }
 
     void TurtlePlugin::shutdownPlugin()
@@ -56,6 +64,24 @@ namespace rqt_turtle {
     {
         // Usually used to open a dialog to offer the user a set of configuration
     }*/
+
+    void TurtlePlugin::on_btnReset_clicked()
+    {
+        ROS_INFO("Reset turtlesim.");
+        std_srvs::Empty empty;
+        ros::service::call<std_srvs::Empty>("reset", empty);
+    }
+
+    void TurtlePlugin::on_btnSpawn_clicked()
+    {
+        ROS_INFO("Spawn turtle.");
+        turtlesim::Spawn spawn;
+        spawn.request.x = 5.0;
+        spawn.request.y = 5.0;
+        spawn.request.theta = 0.0;
+        spawn.request.name = "new_turtle";
+        ros::service::call<turtlesim::Spawn>("spawn", spawn);
+    }
 
 } // namespace
 

@@ -29,6 +29,11 @@ namespace rqt_turtle {
     private:
         Ui::TurtlePluginWidget *ui_;
         QWidget* widget_;
+
+
+    private slots:
+        void on_btnReset_clicked();
+        void on_btnSpawn_clicked();
     };
 
 } // namespace
