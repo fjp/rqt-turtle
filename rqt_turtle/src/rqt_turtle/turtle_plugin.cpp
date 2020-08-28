@@ -1,6 +1,7 @@
 #include "rqt_turtle/turtle_plugin.h"
 #include <pluginlib/class_list_macros.h>
 #include <QStringList>
+#include <QInputDialog>
 
 #include <std_srvs/Empty.h>
 #include <turtlesim/Spawn.h>
@@ -71,18 +72,37 @@ namespace rqt_turtle {
         ROS_INFO("Reset turtlesim.");
         std_srvs::Empty empty;
         ros::service::call<std_srvs::Empty>("reset", empty);
+
+        // Clear the listViewWidget
+        ui_->lvTurtles->clear();
     }
 
     void TurtlePlugin::on_btnSpawn_clicked()
     {
-        ROS_INFO("Spawn turtle.");
+        bool ok;
+        QString qstrTurtleName = QInputDialog::getText(widget_, tr("Spawn Turtle"),
+                                            tr("Name:"), QLineEdit::Normal,
+                                            tr("MyTurtle"), &ok);
+        if (!ok || qstrTurtleName.isEmpty())
+        {
+            return;
+        }
+        auto existingTurtles = ui_->lvTurtles->findItems(qstrTurtleName, Qt::MatchExactly);
+        const char * strTurtleName = qstrTurtleName.toStdString().c_str();
+        if (existingTurtles.size() > 0)
+        {
+            ROS_INFO("Turtle with the name \"%s\" already exists.", strTurtleName);
+            return;
+        }
+
+        ROS_INFO("Spawn turtle: %s.", strTurtleName);
         turtlesim::Spawn spawn;
-        spawn.request.x = 5.0;
-        spawn.request.y = 5.0;
-        spawn.request.theta = 0.0;
-        spawn.request.name = "new_turtle";
+        spawn.request.x = random() % 12;
+        spawn.request.y = random() % 12;
+        spawn.request.theta = random() % 12;
+        spawn.request.name = qstrTurtleName.toStdString();
         ros::service::call<turtlesim::Spawn>("spawn", spawn);
-        ui_->lvTurtles->addItems(QStringList("new_turtle"));
+        ui_->lvTurtles->addItems(QStringList(qstrTurtleName));
     }
 
     void TurtlePlugin::on_btnDraw_clicked()
@@ -93,6 +113,7 @@ namespace rqt_turtle {
         {
             QString turtleName = list[0]->text();
             ROS_INFO(turtleName.toStdString().c_str());
+
         }
         
     }
