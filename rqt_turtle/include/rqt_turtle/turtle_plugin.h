@@ -34,6 +34,7 @@ namespace rqt_turtle {
     private slots:
         void on_btnReset_clicked();
         void on_btnSpawn_clicked();
+        void on_btnDraw_clicked();
     };
 
 } // namespace

@@ -36,6 +36,7 @@ namespace rqt_turtle {
 
         connect(ui_->btnReset, SIGNAL(clicked()), this, SLOT(on_btnReset_clicked()));
         connect(ui_->btnSpawn, SIGNAL(clicked()), this, SLOT(on_btnSpawn_clicked()));
+        connect(ui_->btnDraw, SIGNAL(clicked()), this, SLOT(on_btnDraw_clicked()));
     }
 
     void TurtlePlugin::shutdownPlugin()
@@ -81,6 +82,19 @@ namespace rqt_turtle {
         spawn.request.theta = 0.0;
         spawn.request.name = "new_turtle";
         ros::service::call<turtlesim::Spawn>("spawn", spawn);
+        ui_->lvTurtles->addItems(QStringList("new_turtle"));
+    }
+
+    void TurtlePlugin::on_btnDraw_clicked()
+    {
+        auto list = ui_->lvTurtles->selectedItems();
+        ROS_INFO("%d", list.size());
+        if (list.size() > 0)
+        {
+            QString turtleName = list[0]->text();
+            ROS_INFO(turtleName.toStdString().c_str());
+        }
+        
     }
 
 } // namespace

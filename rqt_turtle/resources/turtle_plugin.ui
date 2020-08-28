@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>528</width>
-    <height>352</height>
+    <height>332</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -28,7 +28,7 @@
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="1">
-       <widget class="QComboBox" name="cb_shape">
+       <widget class="QComboBox" name="cbShape">
         <item>
          <property name="text">
           <string>Rectangle</string>
@@ -53,9 +53,6 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="0" rowspan="7">
-       <widget class="QListView" name="lv_turtles"/>
-      </item>
       <item row="2" column="1">
        <widget class="QPushButton" name="btnTeleport_abs">
         <property name="text">
@@ -76,6 +73,9 @@
          <string>Kill</string>
         </property>
        </widget>
+      </item>
+      <item row="0" column="0" rowspan="7">
+       <widget class="QListWidget" name="lvTurtles"/>
       </item>
      </layout>
     </widget>
