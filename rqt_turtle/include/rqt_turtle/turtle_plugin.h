@@ -4,9 +4,13 @@
 #include <rqt_gui_cpp/plugin.h>
 //#include <ui_turtle_plugin.h>
 #include <QWidget>
+#include <QDialog>
+
+class QListWidgetItem;
 
 namespace Ui {
     class TurtlePluginWidget;
+    class DialogTopic;
 }
 
 namespace rqt_turtle {
@@ -27,14 +31,23 @@ namespace rqt_turtle {
         //bool hasConfiguration() const;
         //void triggerConfiguration();
     private:
-        Ui::TurtlePluginWidget *ui_;
-        QWidget* widget_;
+        Ui::TurtlePluginWidget* m_pUi;
+        QWidget* m_pWidget;
+
+        Ui::TopicWidget* m_pUiTopicWidget;
+        QDialog* m_pTopicDialog;
+
+        std::string m_strSelectedTurtle;
 
 
     private slots:
         void on_btnReset_clicked();
         void on_btnSpawn_clicked();
         void on_btnDraw_clicked();
+
+        void on_btnTeleportAbs_clicked();
+
+        void on_selection_changed();
     };
 
 } // namespace

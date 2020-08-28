@@ -2,19 +2,24 @@
 #include <pluginlib/class_list_macros.h>
 #include <QStringList>
 #include <QInputDialog>
+#include <QListWidgetItem>
 
 #include <std_srvs/Empty.h>
 #include <turtlesim/Spawn.h>
+#include <turtlesim/TeleportAbsolute.h>
 #include <ros/service.h>
 
+
 #include "ui_turtle_plugin.h"
+#include "ui_TopicWidget.h"
 
 namespace rqt_turtle {
 
     TurtlePlugin::TurtlePlugin()
         : rqt_gui_cpp::Plugin()
-        , ui_(new Ui::TurtlePluginWidget)
-        , widget_(0)
+        , m_pUi(new Ui::TurtlePluginWidget)
+        , m_pWidget(0)
+        , m_pTopicWidget(new Ui::TopicWidget)
     {
         // Constructor is called first before initPlugin function, needless to say.
 
@@ -27,17 +32,27 @@ namespace rqt_turtle {
         // access standalone command line arguments
         QStringList argv = context.argv();
         // create QWidget
-        widget_ = new QWidget();
+        m_pWidget = new QWidget();
         // extend the widget with all attributes and children from UI file
-        //ui_.setupUi(widget_);
+        //m_pUi.setupUi(widget_);
         ROS_INFO("INIT");
-        ui_->setupUi(widget_);
+        m_pUi->setupUi(m_pWidget);
         // add widget to the user interface
-        context.addWidget(widget_);
+        context.addWidget(m_pWidget);
 
-        connect(ui_->btnReset, SIGNAL(clicked()), this, SLOT(on_btnReset_clicked()));
-        connect(ui_->btnSpawn, SIGNAL(clicked()), this, SLOT(on_btnSpawn_clicked()));
-        connect(ui_->btnDraw, SIGNAL(clicked()), this, SLOT(on_btnDraw_clicked()));
+        connect(m_pUi->btnReset, SIGNAL(clicked()), this, SLOT(on_btnReset_clicked()));
+        connect(m_pUi->btnSpawn, SIGNAL(clicked()), this, SLOT(on_btnSpawn_clicked()));
+        connect(m_pUi->btnDraw, SIGNAL(clicked()), this, SLOT(on_btnDraw_clicked()));
+        connect(m_pUi->btnTeleportAbs, SIGNAL(clicked()), this, SLOT(on_btnTeleportAbs_clicked()));
+
+        connect(m_pUi->lvTurtles, SIGNAL(itemSelectionChanged()), 
+                this, SLOT(on_selection_changed()));
+
+        
+        m_pTopicDialog = new QDialog(0,0);
+        m_pUiTopicWidget->setupUi(m_pTopicDialog);
+
+        m_pTopicDialog->show();
     }
 
     void TurtlePlugin::shutdownPlugin()
@@ -74,20 +89,20 @@ namespace rqt_turtle {
         ros::service::call<std_srvs::Empty>("reset", empty);
 
         // Clear the listViewWidget
-        ui_->lvTurtles->clear();
+        m_pUi->lvTurtles->clear();
     }
 
     void TurtlePlugin::on_btnSpawn_clicked()
     {
         bool ok;
-        QString qstrTurtleName = QInputDialog::getText(widget_, tr("Spawn Turtle"),
+        QString qstrTurtleName = QInputDialog::getText(m_pWidget, tr("Spawn Turtle"),
                                             tr("Name:"), QLineEdit::Normal,
                                             tr("MyTurtle"), &ok);
         if (!ok || qstrTurtleName.isEmpty())
         {
             return;
         }
-        auto existingTurtles = ui_->lvTurtles->findItems(qstrTurtleName, Qt::MatchExactly);
+        auto existingTurtles = m_pUi->lvTurtles->findItems(qstrTurtleName, Qt::MatchExactly);
         const char * strTurtleName = qstrTurtleName.toStdString().c_str();
         if (existingTurtles.size() > 0)
         {
@@ -102,12 +117,12 @@ namespace rqt_turtle {
         spawn.request.theta = random() % 12;
         spawn.request.name = qstrTurtleName.toStdString();
         ros::service::call<turtlesim::Spawn>("spawn", spawn);
-        ui_->lvTurtles->addItems(QStringList(qstrTurtleName));
+        m_pUi->lvTurtles->addItems(QStringList(qstrTurtleName));
     }
 
     void TurtlePlugin::on_btnDraw_clicked()
     {
-        auto list = ui_->lvTurtles->selectedItems();
+        auto list = m_pUi->lvTurtles->selectedItems();
         ROS_INFO("%d", list.size());
         if (list.size() > 0)
         {
@@ -117,6 +132,28 @@ namespace rqt_turtle {
         }
         
     }
+
+    void TurtlePlugin::on_btnTeleportAbs_clicked()
+    {
+        std::string strServiceName = "/" + m_strSelectedTurtle + "/teleport_absolute";
+        turtlesim::TeleportAbsolute sTeleportAbsolute;
+        auto request = sTeleportAbsolute.request;
+        request.x = 1.0;
+        request.y = 1.0;
+        ROS_INFO("Teleport %s to x: %d, y: %d", m_strSelectedTurtle.c_str(), request.x, request.y);
+        ros::service::call<turtlesim::TeleportAbsolute>(strServiceName, sTeleportAbsolute);
+        auto response = sTeleportAbsolute.response;
+        
+    }
+
+
+    void TurtlePlugin::on_selection_changed()
+    {
+        auto current = m_pUi->lvTurtles->currentItem(); // TODO use member list if multiple turtles are selected
+        m_strSelectedTurtle = current->text().toStdString();
+        ROS_INFO("Turtle %s selected", m_strSelectedTurtle.c_str());
+    }
+
 
 } // namespace
 
