@@ -9,6 +9,7 @@
 #include <turtlesim/Spawn.h>
 #include <turtlesim/TeleportAbsolute.h>
 #include <ros/service.h>
+#include <ros/param.h>
 
 
 #include "ui_turtle_plugin.h"
@@ -142,7 +143,20 @@ namespace rqt_turtle {
 
     void TurtlePlugin::on_btnColor_clicked()
     {
-        
+        int r, g, b;
+        ros::param::get("/turtlesim/background_b", b);
+        ros::param::get("/turtlesim/background_g", g);
+        ros::param::get("/turtlesim/background_r", r);
+        ROS_INFO("Current color (r,g,b) = (%i,%i,%i)", r, g, b);
+        QColor qColor = QColorDialog::getColor();
+        ROS_INFO("Color %s", qColor.name().toStdString().c_str());
+        qColor.getRgb(&r, &g, &b);
+        ROS_INFO("Setting color to (r,g,b) = (%i,%i,%i)", r, g, b);
+        ros::param::set("/turtlesim/background_b", b);
+        ros::param::set("/turtlesim/background_g", g);
+        ros::param::set("/turtlesim/background_r", r);
+
+        // Note: this will not set the color (only after reset is called)
     }
 
     void TurtlePlugin::on_btnDraw_clicked()
