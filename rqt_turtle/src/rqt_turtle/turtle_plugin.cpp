@@ -1,7 +1,8 @@
 #include "rqt_turtle/turtle_plugin.h"
 #include <pluginlib/class_list_macros.h>
 #include <QStringList>
-#include <QInputDialog>
+#include <QInputDialog>  // TODO remove
+#include <QColorDialog>
 #include <QListWidgetItem>
 
 #include <std_srvs/Empty.h>
@@ -11,7 +12,9 @@
 
 
 #include "ui_turtle_plugin.h"
-#include "ui_TopicWidget.h"
+
+
+#include "rqt_turtle/service_caller.h"
 
 namespace rqt_turtle {
 
@@ -19,12 +22,13 @@ namespace rqt_turtle {
         : rqt_gui_cpp::Plugin()
         , m_pUi(new Ui::TurtlePluginWidget)
         , m_pWidget(0)
-        , m_pTopicWidget(new Ui::TopicWidget)
     {
         // Constructor is called first before initPlugin function, needless to say.
 
         // give QObjects reasonable names
         setObjectName("TurtlePlugin");
+
+        //m_pServiceCaller = new ServiceCaller(m_pWidget);
     }
 
     void TurtlePlugin::initPlugin(qt_gui_cpp::PluginContext& context)
@@ -42,6 +46,7 @@ namespace rqt_turtle {
 
         connect(m_pUi->btnReset, SIGNAL(clicked()), this, SLOT(on_btnReset_clicked()));
         connect(m_pUi->btnSpawn, SIGNAL(clicked()), this, SLOT(on_btnSpawn_clicked()));
+        connect(m_pUi->btnColor, SIGNAL(clicked()), this, SLOT(on_btnColor_clicked()));
         connect(m_pUi->btnDraw, SIGNAL(clicked()), this, SLOT(on_btnDraw_clicked()));
         connect(m_pUi->btnTeleportAbs, SIGNAL(clicked()), this, SLOT(on_btnTeleportAbs_clicked()));
 
@@ -49,10 +54,10 @@ namespace rqt_turtle {
                 this, SLOT(on_selection_changed()));
 
         
-        m_pTopicDialog = new QDialog(0,0);
-        m_pUiTopicWidget->setupUi(m_pTopicDialog);
+        //m_pServiceCallerDialog = new QDialog(0,0);
+        //m_pUiServiceCallerWidget->setupUi(m_pServiceCallerDialog);
 
-        m_pTopicDialog->show();
+        //m_pServiceCallerDialog->show();
     }
 
     void TurtlePlugin::shutdownPlugin()
@@ -95,11 +100,26 @@ namespace rqt_turtle {
     void TurtlePlugin::on_btnSpawn_clicked()
     {
         bool ok;
-        QString qstrTurtleName = QInputDialog::getText(m_pWidget, tr("Spawn Turtle"),
-                                            tr("Name:"), QLineEdit::Normal,
-                                            tr("MyTurtle"), &ok);
+        //QString qstrTurtleName = QInputDialog::getText(m_pWidget, tr("Spawn Turtle"),
+        //                                    tr("Name:"), QLineEdit::Normal,
+        //                                    tr("MyTurtle"), &ok);
+        ROS_INFO("new caller");
+        m_pServiceCaller = new ServiceCaller(m_pWidget);
+        ROS_INFO("caller created");
+        QString qstrTurtleName;
+        if (m_pServiceCaller->exec() == QDialog::Accepted)
+        {
+            ROS_INFO("accepted");
+            qstrTurtleName = m_pServiceCaller->getTurtleName();
+        }
+
+        //ros::service::  get_service_class_by_name(service_name)
+        //m_pServiceCaller
+
+
         if (!ok || qstrTurtleName.isEmpty())
         {
+            ROS_INFO("Closed Service Caller Dialog or Turtle Name empty.");
             return;
         }
         auto existingTurtles = m_pUi->lvTurtles->findItems(qstrTurtleName, Qt::MatchExactly);
@@ -118,6 +138,11 @@ namespace rqt_turtle {
         spawn.request.name = qstrTurtleName.toStdString();
         ros::service::call<turtlesim::Spawn>("spawn", spawn);
         m_pUi->lvTurtles->addItems(QStringList(qstrTurtleName));
+    }
+
+    void TurtlePlugin::on_btnColor_clicked()
+    {
+        
     }
 
     void TurtlePlugin::on_btnDraw_clicked()

@@ -2,18 +2,18 @@
 #define rqt_turtle__turtle_plugin_H
 
 #include <rqt_gui_cpp/plugin.h>
-//#include <ui_turtle_plugin.h>
 #include <QWidget>
-#include <QDialog>
+
 
 class QListWidgetItem;
 
 namespace Ui {
     class TurtlePluginWidget;
-    class DialogTopic;
 }
 
 namespace rqt_turtle {
+
+    class ServiceCaller;
 
 
     class TurtlePlugin
@@ -34,8 +34,8 @@ namespace rqt_turtle {
         Ui::TurtlePluginWidget* m_pUi;
         QWidget* m_pWidget;
 
-        Ui::TopicWidget* m_pUiTopicWidget;
-        QDialog* m_pTopicDialog;
+        ServiceCaller* m_pServiceCaller;
+        
 
         std::string m_strSelectedTurtle;
 
@@ -43,6 +43,7 @@ namespace rqt_turtle {
     private slots:
         void on_btnReset_clicked();
         void on_btnSpawn_clicked();
+        void on_btnColor_clicked();
         void on_btnDraw_clicked();
 
         void on_btnTeleportAbs_clicked();
