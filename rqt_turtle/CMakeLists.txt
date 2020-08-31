@@ -11,15 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rqt_gui
   rqt_gui_cpp
-  #rqt_topic
 )
-
-find_package(rqt_topic)
-
-message("FOUND rqt_topic" ${rqt_topic_FOUND})
-
-message("FOUND" ${rqt_topic_INCLUDES}/rqt_topic/resource)
-message("FOUND" ${rqt_topic_INCLUDE_DIRS}/rqt_topic/resource)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -66,6 +58,10 @@ catkin_python_setup()
 #  CATKIN_DEPENDS roscpp rqt_gui rqt_gui_cpp
 #  DEPENDS system_lib
 #)
+# Call the macro without arguments because we don't want to export anything
+# Note that this macro is required if catkin_install_python() is used!
+# https://stackoverflow.com/questions/56801645/ros1-catkin-make-failed-catkin-install-python-called-without-required-destina
+catkin_package()
 
 ###########
 ## Build ##
@@ -108,24 +104,20 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
-# WIP TODO remove here (only used for rqt_topic)
-include_directories(${catkin_INCLUDE_DIRS})
-message(${catkin_INCLUDE_DIRS})
-message(${rqt_topic_INCLUDE_DIRS})
-
 
 set(rqt_turtle_SRCS
   src/rqt_turtle/turtle_plugin.cpp
+  src/rqt_turtle/service_caller.cpp
 )
 
 set(rqt_turtle_HDRS
   include/rqt_turtle/turtle_plugin.h
+  include/rqt_turtle/service_caller.h
 )
 
 set(rqt_turtle_UIS
   resources/turtle_plugin.ui
-  ${rqt_topic_INCLUDE_DIRS}/resource/TopicWidget.ui
-#  ${CATKIN_INSTALL_PREFIX}/${CATKIN_GLOBAL_SHARE_DESTINATION}/rqt_topic/resource/TopicWidget.ui
+  resources/ServiceCaller.ui
 )
 
 set(rqt_turtle_INCLUDE_DIRECTORIES
@@ -137,13 +129,17 @@ if(NOT EXISTS "${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_INCLUDE_DESTINATION}")
 endif()
 
 
-qt5_wrap_cpp(rqt_turtle_MOCS ${rqt_turtle_HDRS})
+qt5_wrap_cpp(rqt_turtle_MOCS 
+  ${rqt_turtle_HDRS}
+)
 
 # ensure generated header files are being created in the devel space
 set(_cmake_current_binary_dir "${CMAKE_CURRENT_BINARY_DIR}")
 set(CMAKE_CURRENT_BINARY_DIR "${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_INCLUDE_DESTINATION}")
 
-qt5_wrap_ui(rqt_turtle_UIS_H ${rqt_turtle_UIS})
+qt5_wrap_ui(rqt_turtle_UIS_H 
+  ${rqt_turtle_UIS}
+)
 
 message(${CMAKE_CURRENT_BINARY_DIR})
 
@@ -186,8 +182,7 @@ class_loader_hide_library_symbols(${PROJECT_NAME})
 ## in contrast to setup.py, you can choose the destination
 # For our (optional) script to be installed to the right location, 
 # if users install your package, this line is required
-catkin_install_python(PROGRAMS
-  scripts/rqt_turtle
+catkin_install_python(PROGRAMS scripts/rqt_turtle
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
