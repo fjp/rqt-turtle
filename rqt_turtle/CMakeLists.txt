@@ -150,6 +150,7 @@ include_directories(${rqt_turtle_INCLUDE_DIRECTORIES} ${catkin_INCLUDE_DIRS})
 add_library(${PROJECT_NAME} ${rqt_turtle_SRCS} ${rqt_turtle_MOCS} ${rqt_turtle_UIS_H})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} Qt5::Widgets)
 
+
 # TODO use?
 find_package(class_loader)
 class_loader_hide_library_symbols(${PROJECT_NAME})
