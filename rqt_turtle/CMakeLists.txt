@@ -148,7 +148,7 @@ set(CMAKE_CURRENT_BINARY_DIR "${_cmake_current_binary_dir}")
 
 include_directories(${rqt_turtle_INCLUDE_DIRECTORIES} ${catkin_INCLUDE_DIRS})
 add_library(${PROJECT_NAME} ${rqt_turtle_SRCS} ${rqt_turtle_MOCS} ${rqt_turtle_UIS_H})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} Qt5::Widgets)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${tinyxml_libraries} Qt5::Widgets)
 
 
 # TODO use?

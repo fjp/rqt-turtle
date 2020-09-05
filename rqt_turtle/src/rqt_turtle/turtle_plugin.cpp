@@ -104,6 +104,10 @@ namespace rqt_turtle {
         //QString qstrTurtleName = QInputDialog::getText(m_pWidget, tr("Spawn Turtle"),
         //                                    tr("Name:"), QLineEdit::Normal,
         //                                    tr("MyTurtle"), &ok);
+
+        ROS_INFO("init Service Caller");
+
+
         ROS_INFO("new caller");
         m_pServiceCaller = new ServiceCaller(m_pWidget);
         ROS_INFO("caller created");

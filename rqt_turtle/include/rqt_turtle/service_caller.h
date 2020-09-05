@@ -4,6 +4,8 @@
 #include <rqt_gui_cpp/plugin.h>
 #include <QDialog>
 
+#include <turtlesim/Pose.h>
+
 class QListWidgetItem;
 
 namespace Ui {
@@ -19,11 +21,17 @@ namespace rqt_turtle {
     public:
         ServiceCaller(QWidget* parent);
 
+        bool lookupService(const std::string &name);//, std::string &serv_host, uint32_t &serv_port)
+
 
         QString getTurtleName();
+        turtlesim::Pose getTurtleLocation();
 
         Ui::ServiceCallerWidget* m_pUi;
         QDialog* m_pServiceCallerDialog;
+
+
+        std::string execute_command(const char* cmd);
 
 
     private slots:
