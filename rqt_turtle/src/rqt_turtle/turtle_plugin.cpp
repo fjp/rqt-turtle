@@ -3,7 +3,8 @@
 #include <QStringList>
 #include <QInputDialog>  // TODO remove
 #include <QColorDialog>
-#include <QListWidgetItem>
+#include <QVariantMap>
+#include <QTreeWidgetItem>
 
 #include <std_srvs/Empty.h>
 #include <turtlesim/Spawn.h>
@@ -100,23 +101,19 @@ namespace rqt_turtle {
 
     void TurtlePlugin::on_btnSpawn_clicked()
     {
-        bool ok;
-        //QString qstrTurtleName = QInputDialog::getText(m_pWidget, tr("Spawn Turtle"),
-        //                                    tr("Name:"), QLineEdit::Normal,
-        //                                    tr("MyTurtle"), &ok);
-        ROS_INFO("new caller");
-        m_pServiceCaller = new ServiceCaller(m_pWidget);
-        ROS_INFO("caller created");
+        ROS_DEBUG("Spawn clicked");
+        std::string service_name = "/spawn";
+        m_pServiceCaller = new ServiceCaller(m_pWidget, service_name);
+
         QString qstrTurtleName;
-        if (m_pServiceCaller->exec() == QDialog::Accepted)
+        QVariantMap request;
+        bool ok = m_pServiceCaller->exec() == QDialog::Accepted;
+        if (ok)
         {
             ROS_INFO("accepted");
-            qstrTurtleName = m_pServiceCaller->getTurtleName();
+            request = m_pServiceCaller->getRequest();
+            qstrTurtleName = request["name"].toString();
         }
-
-        //ros::service::  get_service_class_by_name(service_name)
-        //m_pServiceCaller
-
 
         if (!ok || qstrTurtleName.isEmpty())
         {
@@ -133,10 +130,10 @@ namespace rqt_turtle {
 
         ROS_INFO("Spawn turtle: %s.", strTurtleName);
         turtlesim::Spawn spawn;
-        spawn.request.x = random() % 12;
-        spawn.request.y = random() % 12;
-        spawn.request.theta = random() % 12;
-        spawn.request.name = qstrTurtleName.toStdString();
+        spawn.request.x = request["x"].toString().toFloat();
+        spawn.request.y = request["y"].toString().toFloat();
+        spawn.request.theta = request["theta"].toFloat();
+        spawn.request.name = request["name"].toString().toStdString().c_str();
         ros::service::call<turtlesim::Spawn>("spawn", spawn);
         m_pUi->lvTurtles->addItems(QStringList(qstrTurtleName));
     }

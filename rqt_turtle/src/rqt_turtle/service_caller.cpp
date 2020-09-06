@@ -1,6 +1,8 @@
 #include "rqt_turtle/service_caller.h"
-#include <QListWidgetItem>
+#include <QTreeWidgetItem>
 #include <QDialog>
+#include <QList>
+#include <QStringList>
 
 #include <ros/service.h>
 #include <ros/master.h>
@@ -11,45 +13,110 @@
 
 namespace rqt_turtle {
 
-    ServiceCaller::ServiceCaller(QWidget* parent)
+    ServiceCaller::ServiceCaller(QWidget* parent, std::string service_name)
         : m_pUi(new Ui::ServiceCallerWidget)
         , m_pServiceCallerDialog(this)
+        , service_name_(service_name)
     {
         // give QObjects reasonable names
         setObjectName("ServiceCaller");
 
-        ROS_INFO("INIT");
+        ROS_INFO("Initialize ServiceCaller for %s", service_name.c_str());
 
         m_pUi->setupUi(m_pServiceCallerDialog);
 
-
         connect(m_pUi->btnCall, SIGNAL(clicked()), this, SLOT(on_btnCall_clicked()));
 
-        //m_pServiceCallerDialog->show();
+        createTreeItems(service_name);
+    }
+
+
+    std::string ServiceCaller::exec_cmd(std::string str_cmd) 
+    {
+        const char* cmd = str_cmd.c_str();
+        std::array<char, 128> buffer;
+        std::string result;
+        std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+        if (!pipe) {
+            throw std::runtime_error("popen() failed!");
+        }
+        while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+            result += buffer.data();
+        }
+        return result;
+    }
+
+
+    void ServiceCaller::createTreeItems(std::string service_name)
+    {
+        ROS_INFO("Create Tree Items for service %s", service_name.c_str());
+
+        // Get service type and args
+        std::string cmd_type = "rosservice type " + service_name;
+        ROS_INFO("cmd_type: %s", cmd_type.c_str());
+        std::string service_type = exec_cmd(cmd_type);
+        std::string cmd_info = "rosservice info " + service_name;
+        std::string service_info = exec_cmd(cmd_info);
+        QString qstr_service_info = QString::fromStdString(service_info);
+        QString qstr_args = "Args:";
+        int idx = qstr_service_info.indexOf(qstr_args);
+        QString service_args_line = qstr_service_info.right(qstr_service_info.size() - idx - qstr_args.size());
+        ROS_INFO("Service args: %s", service_args_line.toStdString().c_str());
+        QStringList qstrArgs = service_args_line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+
+
+
+        //QVector<QString> service_args;
+        //service_args.append()
+
+
+
+        // https://doc.qt.io/qt-5/qtreewidget.html#details
+        QList<QTreeWidgetItem *> items;
+        for (int i = 0; i < qstrArgs.size(); ++i)
+        {
+            QStringList i_args;
+            i_args.append(qstrArgs[i]);
+            i_args.append(QString::fromStdString("float32"));
+            i_args.append(QString::fromStdString("0.0"));
+            QTreeWidgetItem* item = new QTreeWidgetItem(static_cast<QTreeWidget *>(nullptr), i_args);
+            item->setFlags(Qt::ItemIsEditable|Qt::ItemIsEnabled);
+            items.append(item);
+        }
+        m_pUi->request_tree_widget->insertTopLevelItems(0, items);
     }
 
     void ServiceCaller::on_btnCall_clicked()
     {
-        ROS_INFO("Call clicked.");
+        ROS_INFO("Call clicked");
 
-
-        XmlRpc::XmlRpcValue req = "/spawn";
-        XmlRpc::XmlRpcValue res;
-        XmlRpc::XmlRpcValue pay;
-
-        ros::master::execute("getSystemState", req, res, pay, true);
-        ROS_INFO("Size %i", res.size());
-        std::string state[res.size()];
-        for(int x=0; x < res[2][2].size(); x++)
-        {
-            std::string gh = res[2][2][x][0].toXml().c_str();
-            ROS_INFO(gh.c_str());
-            //gh.erase(gh.begin(), gh.begin()+7);
-            //gh.erase(gh.end()-8, gh.end());
-            //state[x] = gh;
-        }
+        
 
         accept();
+    }
+
+
+    QVariantMap ServiceCaller::getRequest()
+    {
+        //return m_pUi->request_tree_widget;
+        //QList<QTreeWidgetItem*> clist = pRequestTreeWidget->findItems("name", Qt::MatchExactly|Qt::MatchRecursive, 0);
+        //foreach(QTreeWidgetItem* item, clist)
+        //{
+        //    ROS_INFO("output: %s", item->text(2).toStdString().c_str());
+        //}
+    
+        //QMap<QString, QVariant> map;
+        QVariantMap map;
+
+        // https://doc.qt.io/archives/qt-4.8/qtreewidgetitemiterator.html#details
+        QTreeWidgetItemIterator it(m_pUi->request_tree_widget);
+        while (*it)
+        {
+            QString variable = (*it)->text(0);
+            map[variable] = (*it)->text(2);
+            ++it;
+        }
+        return map;
     }
 
     QString ServiceCaller::getTurtleName()
