@@ -108,11 +108,13 @@ include_directories(
 set(rqt_turtle_SRCS
   src/rqt_turtle/turtle_plugin.cpp
   src/rqt_turtle/service_caller.cpp
+  src/rqt_turtle/turtle.cpp
 )
 
 set(rqt_turtle_HDRS
   include/rqt_turtle/turtle_plugin.h
   include/rqt_turtle/service_caller.h
+  include/rqt_turtle/turtle.h
 )
 
 set(rqt_turtle_UIS

@@ -2,7 +2,12 @@
 #define rqt_turtle__turtle_plugin_H
 
 #include <rqt_gui_cpp/plugin.h>
+
 #include <QWidget>
+#include <QSharedPointer>
+#include <QVariantMap>
+
+#include <rqt_turtle/turtle.h>
 
 
 class QListWidgetItem;
@@ -45,6 +50,9 @@ namespace rqt_turtle {
         std::string m_strSelectedTurtle;
         QVector<QString> m_vSelectedTurtles;
 
+        // Vector to keep track of all turtles (keep turtles on the heap using vector of shared pointers)
+        QVector<QSharedPointer<Turtle> > m_vTurtles;
+
 
         /**
          * @brief Teleport selected turtle(s)
@@ -58,7 +66,9 @@ namespace rqt_turtle {
          * 
          * @param teleport_type Can be one of /teleport_absolute or /teleport_relative
          */
-        void teleport(std::string teleport_type);
+        QVariantMap teleport(std::string teleport_type);
+
+        void updateTurtleTree();
 
 
     private slots:

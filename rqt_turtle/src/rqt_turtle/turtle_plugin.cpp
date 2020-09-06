@@ -1,7 +1,6 @@
 #include "rqt_turtle/turtle_plugin.h"
 #include <pluginlib/class_list_macros.h>
 #include <QStringList>
-#include <QInputDialog>  // TODO remove
 #include <QColorDialog>
 #include <QVariantMap>
 #include <QTreeWidgetItem>
@@ -10,12 +9,13 @@
 #include <turtlesim/Spawn.h>
 #include <turtlesim/Kill.h>
 #include <turtlesim/TeleportAbsolute.h>
+#include <turtlesim/TeleportRelative.h>
 #include <ros/service.h>
 #include <ros/param.h>
+#include <ros/topic.h>
 
 
 #include "ui_turtle_plugin.h"
-
 
 #include "rqt_turtle/service_caller.h"
 
@@ -42,7 +42,7 @@ namespace rqt_turtle {
         m_pWidget = new QWidget();
         // extend the widget with all attributes and children from UI file
         //m_pUi.setupUi(widget_);
-        ROS_INFO("INIT");
+        ROS_INFO("Init rqt_turtle plugin");
         m_pUi->setupUi(m_pWidget);
         // add widget to the user interface
         context.addWidget(m_pWidget);
@@ -53,15 +53,53 @@ namespace rqt_turtle {
         connect(m_pUi->btnColor, SIGNAL(clicked()), this, SLOT(on_btnColor_clicked()));
         connect(m_pUi->btnDraw, SIGNAL(clicked()), this, SLOT(on_btnDraw_clicked()));
         connect(m_pUi->btnTeleportAbs, SIGNAL(clicked()), this, SLOT(on_btnTeleportAbs_clicked()));
+        connect(m_pUi->btnTeleportRel, SIGNAL(clicked()), this, SLOT(on_btnTeleportRel_clicked()));
+        connect(m_pUi->btnTogglePen, SIGNAL(clicked()), this, SLOT(on_btnTogglePen_clicked()));
 
         connect(m_pUi->treeTurtles, SIGNAL(itemSelectionChanged()), 
                 this, SLOT(on_selection_changed()));
 
         
-        //m_pServiceCallerDialog = new QDialog(0,0);
-        //m_pUiServiceCallerWidget->setupUi(m_pServiceCallerDialog);
 
-        //m_pServiceCallerDialog->show();
+        updateTurtleTree();
+    }
+
+    void TurtlePlugin::updateTurtleTree()
+    {
+        // https://stackoverflow.com/questions/26785675/ros-get-current-available-topic-in-code-not-command
+        // Use XML-RPC ROS Master API to get the topic names
+        // Then filter for topics containing pose (which belongs to a turtle)
+        ros::master::V_TopicInfo master_topics;
+        ros::master::getTopics(master_topics);
+
+        ros::NodeHandle nh = getNodeHandle();
+        for (ros::master::V_TopicInfo::iterator it = master_topics.begin(); it != master_topics.end(); it++)
+        {
+            const ros::master::TopicInfo& info = *it;
+            ROS_INFO_STREAM("topic_" << it - master_topics.begin() << ": " << info.name);
+            QString topic_name = QString::fromStdString(info.name);
+            if (topic_name.contains(QString("/pose")))
+            {
+                QStringList topic_name_parts = topic_name.split(QRegExp("\\/"), QString::SkipEmptyParts);
+                std::string turtle_name = topic_name_parts[0].toStdString();
+                ROS_INFO("topic_name_part 0: %s", turtle_name.c_str());
+                
+                // Wait for a single pose message to arrive on the turtlesim::Pose topic
+                turtlesim::PoseConstPtr pose = ros::topic::waitForMessage<turtlesim::Pose>(topic_name.toStdString());
+                ROS_INFO("Pose received: x: %f, y: %f, theta: %f", pose->x, pose->y, pose->theta);
+
+                // Create new turtle in turtle vector
+                // Note: assume that the pen is toggled on
+                QSharedPointer<Turtle> turtle = QSharedPointer<Turtle>(new Turtle(turtle_name, *pose));
+                m_vTurtles.push_back(turtle);
+            }
+        }
+
+        // Insert the turtles into the QTreeWidget
+        for (auto turtle : m_vTurtles)
+        {
+            m_pUi->treeTurtles->insertTopLevelItem(0, turtle->toTreeItem(m_pUi->treeTurtles));
+        }
     }
 
     void TurtlePlugin::shutdownPlugin()
@@ -144,6 +182,7 @@ namespace rqt_turtle {
         item->setText(1, request["x"].toString()); // Column 1 x
         item->setText(2, request["y"].toString()); // Column 2 y
         item->setText(3, request["theta"].toString()); // Column 3 theta
+        item->setText(4, request["theta"].toString()); // Column 4 pen on/off
         // TODO pen on/off
         m_pUi->treeTurtles->insertTopLevelItem(0, item);
     }
@@ -186,25 +225,81 @@ namespace rqt_turtle {
         ros::service::call<turtlesim::Kill>("kill", kill);
 
         // remove turtle from tree widget
-        auto list = m_pUi->treeTurtles->findItems(QString::fromStdString(m_strSelectedTurtle), Qt::MatchExactly);
+        QList<QTreeWidgetItem*> list = m_pUi->treeTurtles->findItems(QString::fromStdString(m_strSelectedTurtle), Qt::MatchExactly);
         for (auto item : list)
         {
             delete item;
         }
+        // TODO there seems to be a bug when the last turtle is deleted.
         //m_pUi->treeTurtles->addItems(QStringList(qstrTurtleName));
     }
 
     void TurtlePlugin::on_btnTeleportAbs_clicked()
     {
         std::string strServiceName = "/" + m_strSelectedTurtle + "/teleport_absolute";
+        QVariantMap request = teleport(strServiceName);
+
+        if (request.empty())
+        {
+            return;
+        }
+
         turtlesim::TeleportAbsolute sTeleportAbsolute;
-        auto request = sTeleportAbsolute.request;
-        request.x = 1.0;
-        request.y = 1.0;
-        ROS_INFO("Teleport %s to x: %d, y: %d", m_strSelectedTurtle.c_str(), request.x, request.y);
+        sTeleportAbsolute.request.x = request["x"].toString().toFloat();
+        sTeleportAbsolute.request.y = request["y"].toString().toFloat();
+        sTeleportAbsolute.request.theta = request["theta"].toString().toFloat();
+        ROS_INFO("Teleport %s to x: %f, y: %f, theta: %f",
+                    m_strSelectedTurtle.c_str(),
+                    sTeleportAbsolute.request.x,
+                    sTeleportAbsolute.request.y,
+                    sTeleportAbsolute.request.theta);
         ros::service::call<turtlesim::TeleportAbsolute>(strServiceName, sTeleportAbsolute);
         auto response = sTeleportAbsolute.response;
+    }
+
+    void TurtlePlugin::on_btnTeleportRel_clicked()
+    {
+        std::string strServiceName = "/" + m_strSelectedTurtle + "/teleport_relative";
+        QVariantMap request = teleport(strServiceName);
+
+        if (request.empty())
+        {
+            return;
+        }
+
+        turtlesim::TeleportRelative sTeleportRelative;
+        sTeleportRelative.request.linear = request["linear"].toString().toFloat();
+        sTeleportRelative.request.angular = request["angular"].toString().toFloat();
+        ROS_INFO("Teleport %s to linear: %f, angular: %f",
+                    m_strSelectedTurtle.c_str(),
+                    sTeleportRelative.request.linear,
+                    sTeleportRelative.request.angular);
+        ros::service::call<turtlesim::TeleportRelative>(strServiceName, sTeleportRelative);
+        auto response = sTeleportRelative.response;
+    }
+
+
+    QVariantMap TurtlePlugin::teleport(std::string strServiceName)
+    {
         
+        m_pServiceCaller = new ServiceCaller(m_pWidget, strServiceName);
+
+        QString qstrTurtleName;
+        QVariantMap request;
+        bool ok = m_pServiceCaller->exec() == QDialog::Accepted;
+        if (ok)
+        {
+            ROS_DEBUG("accepted");
+            request = m_pServiceCaller->getRequest();
+            qstrTurtleName = request["name"].toString();
+        }
+        else
+        {
+            ROS_DEBUG("ServiceCaller Dialog closed");
+            return QVariantMap();
+        }
+
+        return request;
     }
 
 
