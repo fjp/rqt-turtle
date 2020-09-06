@@ -1,6 +1,16 @@
 # rqt-turtle
 
-rqt plugin for ROS rqt to draw in turtlesim using turtlebot.
+[`rqt`](http://wiki.ros.org/rqt) plugin for ROS (Noetic) to control turtles in turtlesim.
+
+![Short Demo](docs/rqt_turtle.gif)
+
+To learn how the package was created, please read the [documentation](https://fjp.at/ros/turtle-pong).
+
+
+## Launch
+
+To run the plugin make sure it is installed in your ros workspace and execute `rqt`.
+From the `Plugins` menu select `Robot Tools->TurtleSim`.
 
 
 ## Dependencies
