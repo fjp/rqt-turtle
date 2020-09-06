@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>528</width>
+    <width>648</width>
     <height>332</height>
    </rect>
   </property>
@@ -75,7 +75,33 @@
        </widget>
       </item>
       <item row="0" column="0" rowspan="7">
-       <widget class="QListWidget" name="lvTurtles"/>
+       <widget class="QTreeWidget" name="treeTurtles">
+        <column>
+         <property name="text">
+          <string>Name</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>x</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>y</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>theta</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>pen</string>
+         </property>
+        </column>
+       </widget>
       </item>
      </layout>
     </widget>

@@ -45,6 +45,7 @@ namespace rqt_turtle {
         void on_btnSpawn_clicked();
         void on_btnColor_clicked();
         void on_btnDraw_clicked();
+        void on_btnKill_clicked();
 
         void on_btnTeleportAbs_clicked();
 

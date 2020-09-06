@@ -8,6 +8,7 @@
 
 #include <std_srvs/Empty.h>
 #include <turtlesim/Spawn.h>
+#include <turtlesim/Kill.h>
 #include <turtlesim/TeleportAbsolute.h>
 #include <ros/service.h>
 #include <ros/param.h>
@@ -48,11 +49,12 @@ namespace rqt_turtle {
 
         connect(m_pUi->btnReset, SIGNAL(clicked()), this, SLOT(on_btnReset_clicked()));
         connect(m_pUi->btnSpawn, SIGNAL(clicked()), this, SLOT(on_btnSpawn_clicked()));
+        connect(m_pUi->btnKill, SIGNAL(clicked()), this, SLOT(on_btnKill_clicked()));
         connect(m_pUi->btnColor, SIGNAL(clicked()), this, SLOT(on_btnColor_clicked()));
         connect(m_pUi->btnDraw, SIGNAL(clicked()), this, SLOT(on_btnDraw_clicked()));
         connect(m_pUi->btnTeleportAbs, SIGNAL(clicked()), this, SLOT(on_btnTeleportAbs_clicked()));
 
-        connect(m_pUi->lvTurtles, SIGNAL(itemSelectionChanged()), 
+        connect(m_pUi->treeTurtles, SIGNAL(itemSelectionChanged()), 
                 this, SLOT(on_selection_changed()));
 
         
@@ -96,7 +98,7 @@ namespace rqt_turtle {
         ros::service::call<std_srvs::Empty>("reset", empty);
 
         // Clear the listViewWidget
-        m_pUi->lvTurtles->clear();
+        m_pUi->treeTurtles->clear();
     }
 
     void TurtlePlugin::on_btnSpawn_clicked()
@@ -120,7 +122,7 @@ namespace rqt_turtle {
             ROS_INFO("Closed Service Caller Dialog or Turtle Name empty.");
             return;
         }
-        auto existingTurtles = m_pUi->lvTurtles->findItems(qstrTurtleName, Qt::MatchExactly);
+        auto existingTurtles = m_pUi->treeTurtles->findItems(qstrTurtleName, Qt::MatchExactly);
         const char * strTurtleName = qstrTurtleName.toStdString().c_str();
         if (existingTurtles.size() > 0)
         {
@@ -135,7 +137,15 @@ namespace rqt_turtle {
         spawn.request.theta = request["theta"].toFloat();
         spawn.request.name = request["name"].toString().toStdString().c_str();
         ros::service::call<turtlesim::Spawn>("spawn", spawn);
-        m_pUi->lvTurtles->addItems(QStringList(qstrTurtleName));
+        //m_pUi->tableTurtles->addItems(QStringList(qstrTurtleName));
+
+        QTreeWidgetItem *item = new QTreeWidgetItem(m_pUi->treeTurtles);
+        item->setText(0, qstrTurtleName); // Column 0 name
+        item->setText(1, request["x"].toString()); // Column 1 x
+        item->setText(2, request["y"].toString()); // Column 2 y
+        item->setText(3, request["theta"].toString()); // Column 3 theta
+        // TODO pen on/off
+        m_pUi->treeTurtles->insertTopLevelItem(0, item);
     }
 
     void TurtlePlugin::on_btnColor_clicked()
@@ -158,15 +168,30 @@ namespace rqt_turtle {
 
     void TurtlePlugin::on_btnDraw_clicked()
     {
-        auto list = m_pUi->lvTurtles->selectedItems();
+        auto list = m_pUi->treeTurtles->selectedItems();
         ROS_INFO("%d", list.size());
         if (list.size() > 0)
         {
-            QString turtleName = list[0]->text();
+            QString turtleName = list[0]->text(0);
             ROS_INFO(turtleName.toStdString().c_str());
 
         }
-        
+    }
+
+    void TurtlePlugin::on_btnKill_clicked()
+    {
+        ROS_INFO("Killing turtle %s", m_strSelectedTurtle.c_str());
+        turtlesim::Kill kill;
+        kill.request.name = m_strSelectedTurtle;
+        ros::service::call<turtlesim::Kill>("kill", kill);
+
+        // remove turtle from tree widget
+        auto list = m_pUi->treeTurtles->findItems(QString::fromStdString(m_strSelectedTurtle), Qt::MatchExactly);
+        for (auto item : list)
+        {
+            delete item;
+        }
+        //m_pUi->treeTurtles->addItems(QStringList(qstrTurtleName));
     }
 
     void TurtlePlugin::on_btnTeleportAbs_clicked()
@@ -185,8 +210,8 @@ namespace rqt_turtle {
 
     void TurtlePlugin::on_selection_changed()
     {
-        auto current = m_pUi->lvTurtles->currentItem(); // TODO use member list if multiple turtles are selected
-        m_strSelectedTurtle = current->text().toStdString();
+        auto current = m_pUi->treeTurtles->currentItem(); // TODO use member list if multiple turtles are selected
+        m_strSelectedTurtle = current->text(0).toStdString();
         ROS_INFO("Turtle %s selected", m_strSelectedTurtle.c_str());
     }
 

@@ -60,16 +60,10 @@ namespace rqt_turtle {
         QString qstr_service_info = QString::fromStdString(service_info);
         QString qstr_args = "Args:";
         int idx = qstr_service_info.indexOf(qstr_args);
+        // right(n) returns n rightmost characters, not characters after n.
         QString service_args_line = qstr_service_info.right(qstr_service_info.size() - idx - qstr_args.size());
         ROS_INFO("Service args: %s", service_args_line.toStdString().c_str());
         QStringList qstrArgs = service_args_line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-
-
-
-        //QVector<QString> service_args;
-        //service_args.append()
-
-
 
         // https://doc.qt.io/qt-5/qtreewidget.html#details
         QList<QTreeWidgetItem *> items;
@@ -77,7 +71,9 @@ namespace rqt_turtle {
         {
             QStringList i_args;
             i_args.append(qstrArgs[i]);
+            // TODO type
             i_args.append(QString::fromStdString("float32"));
+            // TODO init value depending on type
             i_args.append(QString::fromStdString("0.0"));
             QTreeWidgetItem* item = new QTreeWidgetItem(static_cast<QTreeWidget *>(nullptr), i_args);
             item->setFlags(Qt::ItemIsEditable|Qt::ItemIsEnabled);
