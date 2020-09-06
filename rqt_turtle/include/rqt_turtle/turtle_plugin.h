@@ -51,7 +51,7 @@ namespace rqt_turtle {
         QVector<QString> m_vSelectedTurtles;
 
         // Vector to keep track of all turtles (keep turtles on the heap using vector of shared pointers)
-        QVector<QSharedPointer<Turtle> > m_vTurtles;
+        QMap<QString, QSharedPointer<Turtle> > turtles_;
 
 
         /**
@@ -133,6 +133,9 @@ namespace rqt_turtle {
          * 
          */
         void on_btnTeleportRel_clicked();
+
+
+        void on_btnTogglePen_clicked();
 
         /**
          * @brief Keeps track of the slected turtles

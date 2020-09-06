@@ -10,6 +10,7 @@
 #include <turtlesim/Kill.h>
 #include <turtlesim/TeleportAbsolute.h>
 #include <turtlesim/TeleportRelative.h>
+#include <turtlesim/SetPen.h>
 #include <ros/service.h>
 #include <ros/param.h>
 #include <ros/topic.h>
@@ -91,12 +92,12 @@ namespace rqt_turtle {
                 // Create new turtle in turtle vector
                 // Note: assume that the pen is toggled on
                 QSharedPointer<Turtle> turtle = QSharedPointer<Turtle>(new Turtle(turtle_name, *pose));
-                m_vTurtles.push_back(turtle);
+                turtles_[QString::fromStdString(turtle_name)] = turtle;
             }
         }
 
         // Insert the turtles into the QTreeWidget
-        for (auto turtle : m_vTurtles)
+        for (auto turtle : turtles_)
         {
             m_pUi->treeTurtles->insertTopLevelItem(0, turtle->toTreeItem(m_pUi->treeTurtles));
         }
@@ -137,6 +138,8 @@ namespace rqt_turtle {
 
         // Clear the listViewWidget
         m_pUi->treeTurtles->clear();
+
+        updateTurtleTree();
     }
 
     void TurtlePlugin::on_btnSpawn_clicked()
@@ -213,7 +216,6 @@ namespace rqt_turtle {
         {
             QString turtleName = list[0]->text(0);
             ROS_INFO(turtleName.toStdString().c_str());
-
         }
     }
 
@@ -300,6 +302,29 @@ namespace rqt_turtle {
         }
 
         return request;
+    }
+
+
+    void TurtlePlugin::on_btnTogglePen_clicked()
+    {
+        QSharedPointer<Turtle> turtle = turtles_[QString::fromStdString(m_strSelectedTurtle)];
+        if (turtle->pen_.off)
+        {
+            turtle->pen_.off = false;
+        }
+        else
+        {
+            turtle->pen_.off = true;
+        }
+        std::string service_name = "/" + turtle->name_ + "/set_pen";
+        turtlesim::SetPen set_pen;
+        set_pen.request.r = turtle->pen_.r;
+        set_pen.request.g = turtle->pen_.g;
+        set_pen.request.b = turtle->pen_.b;
+        set_pen.request.width = turtle->pen_.width;
+        set_pen.request.off = turtle->pen_.off;
+        ros::service::call<turtlesim::SetPen>(service_name, set_pen);
+        ROS_INFO("Set pen for turtle %s: %s", m_strSelectedTurtle, turtle->pen_.off ? "Off" : "On");
     }
 
 
