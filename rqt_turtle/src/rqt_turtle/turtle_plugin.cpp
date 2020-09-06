@@ -221,24 +221,45 @@ namespace rqt_turtle {
 
     void TurtlePlugin::on_btnKill_clicked()
     {
-        ROS_INFO("Killing turtle %s", m_strSelectedTurtle.c_str());
-        turtlesim::Kill kill;
-        kill.request.name = m_strSelectedTurtle;
-        ros::service::call<turtlesim::Kill>("kill", kill);
-
-        // remove turtle from tree widget
-        QList<QTreeWidgetItem*> list = m_pUi->treeTurtles->findItems(QString::fromStdString(m_strSelectedTurtle), Qt::MatchExactly);
-        for (auto item : list)
+        if (selected_turtles_.empty())
         {
-            delete item;
+            ROS_INFO("No turtles selected");
+            return;
         }
-        // TODO there seems to be a bug when the last turtle is deleted.
-        //m_pUi->treeTurtles->addItems(QStringList(qstrTurtleName));
+
+        for (auto selected_turtle : selected_turtles_)
+        {
+            ROS_INFO("Killing turtle %s", str(selected_turtle).c_str());
+            turtlesim::Kill kill;
+            kill.request.name = str(selected_turtle);
+            ros::service::call<turtlesim::Kill>("kill", kill);
+
+            // remove turtle from tree widget
+            QList<QTreeWidgetItem*> list = m_pUi->treeTurtles->findItems(selected_turtle, Qt::MatchExactly);
+            for (auto item : list)
+            {
+                // Remove turtle from turtles_ QMap
+                turtles_.remove(item->text(0));
+                // Remove the turtle from the QTreeWidget treeTurle
+                delete item;
+            }
+            
+            //m_pUi->treeTurtles->addItems(QStringList(qstrTurtleName));
+        }
     }
 
     void TurtlePlugin::on_btnTeleportAbs_clicked()
     {
-        std::string strServiceName = "/" + m_strSelectedTurtle + "/teleport_absolute";
+        if (selected_turtles_.empty())
+        {
+            ROS_INFO("No turtles selected");
+            return;
+        }
+
+        // Create ServiceCaller for first selected turtle
+        auto it_selected_turtle = selected_turtles_.begin();
+        std::string turtle_name = str(*it_selected_turtle);
+        std::string strServiceName = "/" + turtle_name + "/teleport_absolute";
         QVariantMap request = teleport(strServiceName);
 
         if (request.empty())
@@ -246,22 +267,37 @@ namespace rqt_turtle {
             return;
         }
 
-        turtlesim::TeleportAbsolute sTeleportAbsolute;
-        sTeleportAbsolute.request.x = request["x"].toString().toFloat();
-        sTeleportAbsolute.request.y = request["y"].toString().toFloat();
-        sTeleportAbsolute.request.theta = request["theta"].toString().toFloat();
-        ROS_INFO("Teleport %s to x: %f, y: %f, theta: %f",
-                    m_strSelectedTurtle.c_str(),
-                    sTeleportAbsolute.request.x,
-                    sTeleportAbsolute.request.y,
-                    sTeleportAbsolute.request.theta);
-        ros::service::call<turtlesim::TeleportAbsolute>(strServiceName, sTeleportAbsolute);
-        auto response = sTeleportAbsolute.response;
+        for (auto selected_turtle : selected_turtles_)
+        {
+            turtle_name = str(selected_turtle);
+            strServiceName = "/" + turtle_name + "/teleport_absolute";
+
+            turtlesim::TeleportAbsolute sTeleportAbsolute;
+            sTeleportAbsolute.request.x = request["x"].toString().toFloat();
+            sTeleportAbsolute.request.y = request["y"].toString().toFloat();
+            sTeleportAbsolute.request.theta = request["theta"].toString().toFloat();
+            ROS_INFO("Teleport %s to x: %f, y: %f, theta: %f",
+                        turtle_name.c_str(),
+                        sTeleportAbsolute.request.x,
+                        sTeleportAbsolute.request.y,
+                        sTeleportAbsolute.request.theta);
+            ros::service::call<turtlesim::TeleportAbsolute>(strServiceName, sTeleportAbsolute);
+            auto response = sTeleportAbsolute.response;
+        }
     }
 
     void TurtlePlugin::on_btnTeleportRel_clicked()
     {
-        std::string strServiceName = "/" + m_strSelectedTurtle + "/teleport_relative";
+        if (selected_turtles_.empty())
+        {
+            ROS_INFO("No turtles selected");
+            return;
+        }
+
+        // Create ServiceCaller for first selected turtle
+        auto it_selected_turtle = selected_turtles_.begin();
+        std::string turtle_name = str(*it_selected_turtle);
+        std::string strServiceName = "/" + turtle_name + "/teleport_relative";
         QVariantMap request = teleport(strServiceName);
 
         if (request.empty())
@@ -269,15 +305,21 @@ namespace rqt_turtle {
             return;
         }
 
-        turtlesim::TeleportRelative sTeleportRelative;
-        sTeleportRelative.request.linear = request["linear"].toString().toFloat();
-        sTeleportRelative.request.angular = request["angular"].toString().toFloat();
-        ROS_INFO("Teleport %s to linear: %f, angular: %f",
-                    m_strSelectedTurtle.c_str(),
-                    sTeleportRelative.request.linear,
-                    sTeleportRelative.request.angular);
-        ros::service::call<turtlesim::TeleportRelative>(strServiceName, sTeleportRelative);
-        auto response = sTeleportRelative.response;
+        for (auto selected_turtle : selected_turtles_)
+        {
+            turtle_name = str(selected_turtle);
+            strServiceName = "/" + turtle_name + "/teleport_relative";
+
+            turtlesim::TeleportRelative sTeleportRelative;
+            sTeleportRelative.request.linear = request["linear"].toString().toFloat();
+            sTeleportRelative.request.angular = request["angular"].toString().toFloat();
+            ROS_INFO("Teleport %s to linear: %f, angular: %f",
+                        turtle_name.c_str(),
+                        sTeleportRelative.request.linear,
+                        sTeleportRelative.request.angular);
+            ros::service::call<turtlesim::TeleportRelative>(strServiceName, sTeleportRelative);
+            auto response = sTeleportRelative.response;
+        }
     }
 
 
@@ -307,32 +349,59 @@ namespace rqt_turtle {
 
     void TurtlePlugin::on_btnTogglePen_clicked()
     {
-        QSharedPointer<Turtle> turtle = turtles_[QString::fromStdString(m_strSelectedTurtle)];
-        if (turtle->pen_.off)
+        
+        if (selected_turtles_.empty())
         {
-            turtle->pen_.off = false;
+            ROS_INFO("No turtles selected");
+            return;
         }
-        else
+
+        for (auto selected_turtle : selected_turtles_)
         {
-            turtle->pen_.off = true;
+            QSharedPointer<Turtle> turtle = turtles_[selected_turtle];
+            if (turtle->pen_.off)
+            {
+                turtle->pen_.off = false;
+            }
+            else
+            {
+                turtle->pen_.off = true;
+            }
+            std::string service_name = "/" + turtle->name_ + "/set_pen";
+            turtlesim::SetPen set_pen;
+            set_pen.request.r = turtle->pen_.r;
+            set_pen.request.g = turtle->pen_.g;
+            set_pen.request.b = turtle->pen_.b;
+            set_pen.request.width = turtle->pen_.width;
+            set_pen.request.off = turtle->pen_.off;
+            ros::service::call<turtlesim::SetPen>(service_name, set_pen);
+            ROS_INFO("Set pen for turtle %s: %s", str(selected_turtle).c_str(), turtle->pen_.off ? "Off" : "On");
         }
-        std::string service_name = "/" + turtle->name_ + "/set_pen";
-        turtlesim::SetPen set_pen;
-        set_pen.request.r = turtle->pen_.r;
-        set_pen.request.g = turtle->pen_.g;
-        set_pen.request.b = turtle->pen_.b;
-        set_pen.request.width = turtle->pen_.width;
-        set_pen.request.off = turtle->pen_.off;
-        ros::service::call<turtlesim::SetPen>(service_name, set_pen);
-        ROS_INFO("Set pen for turtle %s: %s", m_strSelectedTurtle, turtle->pen_.off ? "Off" : "On");
     }
 
 
     void TurtlePlugin::on_selection_changed()
     {
-        auto current = m_pUi->treeTurtles->currentItem(); // TODO use member list if multiple turtles are selected
-        m_strSelectedTurtle = current->text(0).toStdString();
-        ROS_INFO("Turtle %s selected", m_strSelectedTurtle.c_str());
+        //auto current = m_pUi->treeTurtles->currentItem(); // TODO use member list if multiple turtles are selected
+        // Get list of selected turtles
+        auto selected_items = m_pUi->treeTurtles->selectedItems();
+        selected_turtles_.clear();
+        if (selected_items.empty())
+        {
+            return;
+        }
+        //m_strSelectedTurtle = current->text(0).toStdString();
+        QString turtle_name;
+        std::stringstream ss;
+        for (auto item : selected_items)
+        {
+            turtle_name = item->text(0);
+            selected_turtles_.push_back(turtle_name);
+            ss << str(turtle_name) << " ";
+            
+        }
+        ROS_INFO("Selected %s", ss.str().c_str());
+        
     }
 
 

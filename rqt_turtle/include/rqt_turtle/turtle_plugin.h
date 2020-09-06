@@ -47,8 +47,8 @@ namespace rqt_turtle {
         ServiceCaller* m_pServiceCaller;
         
 
-        std::string m_strSelectedTurtle;
-        QVector<QString> m_vSelectedTurtles;
+        //std::string m_strSelectedTurtle;
+        QVector<QString> selected_turtles_;
 
         // Vector to keep track of all turtles (keep turtles on the heap using vector of shared pointers)
         QMap<QString, QSharedPointer<Turtle> > turtles_;
@@ -69,6 +69,9 @@ namespace rqt_turtle {
         QVariantMap teleport(std::string teleport_type);
 
         void updateTurtleTree();
+
+
+        inline std::string str(QString qstr) { return qstr.toStdString(); };
 
 
     private slots:
