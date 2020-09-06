@@ -36,6 +36,11 @@
         </item>
         <item>
          <property name="text">
+          <string>Image</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
           <string>Circle</string>
          </property>
         </item>
@@ -76,6 +81,9 @@
       </item>
       <item row="0" column="0" rowspan="7">
        <widget class="QTreeWidget" name="treeTurtles">
+        <property name="selectionMode">
+         <enum>QAbstractItemView::MultiSelection</enum>
+        </property>
         <column>
          <property name="text">
           <string>Name</string>
@@ -101,6 +109,13 @@
           <string>pen</string>
          </property>
         </column>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QPushButton" name="btnTogglePen">
+        <property name="text">
+         <string>Toggle Pen</string>
+        </property>
        </widget>
       </item>
      </layout>
