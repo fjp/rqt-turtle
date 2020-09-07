@@ -4,6 +4,7 @@
 #include <QColorDialog>
 #include <QVariantMap>
 #include <QTreeWidgetItem>
+#include <QMessageBox>
 
 #include <std_srvs/Empty.h>
 #include <turtlesim/Spawn.h>
@@ -26,6 +27,7 @@ namespace rqt_turtle {
         : rqt_gui_cpp::Plugin()
         , m_pUi(new Ui::TurtlePluginWidget)
         , m_pWidget(0)
+        , ac_("turtle_shape", true)
     {
         // Constructor is called first before initPlugin function, needless to say.
 
@@ -33,6 +35,8 @@ namespace rqt_turtle {
         setObjectName("TurtlePlugin");
 
         //m_pServiceCaller = new ServiceCaller(m_pWidget);
+
+        
     }
 
     void TurtlePlugin::initPlugin(qt_gui_cpp::PluginContext& context)
@@ -59,8 +63,6 @@ namespace rqt_turtle {
 
         connect(m_pUi->treeTurtles, SIGNAL(itemSelectionChanged()), 
                 this, SLOT(on_selection_changed()));
-
-        
 
         updateTurtleTree();
     }
@@ -136,8 +138,9 @@ namespace rqt_turtle {
         std_srvs::Empty empty;
         ros::service::call<std_srvs::Empty>("reset", empty);
 
-        // Clear the listViewWidget
+        // Clear the QTreeWidget
         m_pUi->treeTurtles->clear();
+        turtles_.clear();
 
         updateTurtleTree();
     }
@@ -185,8 +188,7 @@ namespace rqt_turtle {
         item->setText(1, request["x"].toString()); // Column 1 x
         item->setText(2, request["y"].toString()); // Column 2 y
         item->setText(3, request["theta"].toString()); // Column 3 theta
-        item->setText(4, request["theta"].toString()); // Column 4 pen on/off
-        // TODO pen on/off
+        item->setText(4, QString("on")); // Column 4 pen on/off (pen is always on by default)
         m_pUi->treeTurtles->insertTopLevelItem(0, item);
     }
 
@@ -210,6 +212,47 @@ namespace rqt_turtle {
 
     void TurtlePlugin::on_btnDraw_clicked()
     {
+        ROS_INFO("Waiting for action server to start.");
+
+        if (!ac_.isServerConnected())
+        {
+            QMessageBox msgBox;
+            msgBox.setText("Waiting for action server to start");
+            msgBox.setInformativeText("Please run 'rosrun turtle_actionlib shape_server' and press Ok or cancel \
+                                       to avoid blocking rqt_turtle gui while wating for shape_server.");
+            msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+            int ret = msgBox.exec();
+            if (ret == QMessageBox::Cancel)
+            {
+                return;
+            }
+        }
+        
+        // wait for the action server to start
+        ac_.waitForServer(); //will wait for infinite time
+
+        ROS_INFO("Action server started, sending goal.");
+        // send a goal to the action
+        turtle_actionlib::ShapeGoal shape;
+        shape.edges = 3;
+        shape.radius = 2.0;
+        ac_.sendGoal(shape);
+
+        //wait for the action to return
+        bool finished_before_timeout = ac_.waitForResult(ros::Duration(30.0));
+
+
+        if (finished_before_timeout)
+        {
+            actionlib::SimpleClientGoalState state = ac_.getState();
+            ROS_INFO("Action finished: %s",state.toString().c_str());
+        }
+        else
+            ROS_INFO("Action did not finish before the time out.");
+
+        //exit
+        return; // TODO fix
+
         auto list = m_pUi->treeTurtles->selectedItems();
         ROS_INFO("%d", list.size());
         if (list.size() > 0)

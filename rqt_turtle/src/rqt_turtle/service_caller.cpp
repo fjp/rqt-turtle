@@ -86,8 +86,6 @@ namespace rqt_turtle {
     {
         ROS_INFO("Call clicked");
 
-        
-
         accept();
     }
 
