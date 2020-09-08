@@ -20,6 +20,8 @@
 #include "ui_turtle_plugin.h"
 
 #include "rqt_turtle/service_caller.h"
+#include "rqt_turtle/draw.h"
+
 
 namespace rqt_turtle {
 

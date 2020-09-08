@@ -22,6 +22,7 @@ namespace Ui {
 namespace rqt_turtle {
 
     class ServiceCaller;
+    class Draw;
 
 
     class TurtlePlugin
@@ -48,6 +49,7 @@ namespace rqt_turtle {
         QWidget* m_pWidget;
 
         ServiceCaller* m_pServiceCaller;
+        Draw* draw_dialog_;
         
 
         //std::string m_strSelectedTurtle;
