@@ -15,12 +15,11 @@ namespace rqt_turtle {
     {
         Q_OBJECT
     public:
-        Draw(QWidget* parent, ros::NodeHandle nh);
+        Draw(QWidget* parent);
 
     private:
         Ui::DrawWidget* ui_;
         QDialog* draw_dialog_;
-        ros::NodeHandle& nh_;
 
 
     private slots:

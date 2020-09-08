@@ -10,10 +10,9 @@
 
 namespace rqt_turtle {
 
-    Draw::Draw(QWidget* parent, ros::NodeHandle& nh)
+    Draw::Draw(QWidget* parent)
         : ui_(new Ui::ServiceCallerWidget)
         , draw_dialog_(this)
-        , nh_(nh)
     {
         // give QObjects reasonable names
         setObjectName("Draw");

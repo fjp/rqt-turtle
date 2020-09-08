@@ -212,6 +212,9 @@ namespace rqt_turtle {
 
     void TurtlePlugin::on_btnDraw_clicked()
     {
+        draw_dialog_ = new Draw(m_pWidget);
+
+
         ROS_INFO("Waiting for action server to start.");
 
         if (!ac_.isServerConnected())
