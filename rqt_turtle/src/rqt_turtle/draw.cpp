@@ -11,7 +11,7 @@
 namespace rqt_turtle {
 
     Draw::Draw(QWidget* parent)
-        : ui_(new Ui::ServiceCallerWidget)
+        : ui_(new Ui::DrawWidget)
         , draw_dialog_(this)
     {
         // give QObjects reasonable names
