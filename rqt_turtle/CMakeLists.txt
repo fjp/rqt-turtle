@@ -18,6 +18,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package(Qt5Widgets REQUIRED)
+# https://docs.opencv.org/2.4/doc/tutorials/introduction/linux_gcc_cmake/linux_gcc_cmake.html
+find_package(OpenCV REQUIRED)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -155,7 +157,7 @@ set(CMAKE_CURRENT_BINARY_DIR "${_cmake_current_binary_dir}")
 
 include_directories(${rqt_turtle_INCLUDE_DIRECTORIES} ${catkin_INCLUDE_DIRS})
 add_library(${PROJECT_NAME} ${rqt_turtle_SRCS} ${rqt_turtle_MOCS} ${rqt_turtle_UIS_H})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} Qt5::Widgets)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} Qt5::Widgets ${OpenCV_LIBS})
 
 
 # TODO use?

@@ -5,7 +5,7 @@
 #include <QMessageBox>
 #include <QImageReader>
 
-#include <opencv2/opencv.hpp>
+
 
 // ROS releated headers
 
@@ -95,18 +95,51 @@ namespace rqt_turtle {
     {
         ROS_INFO("Find Contours");
 
-        cv::Mat image;
-        image = cv::imread(file_name_.toStdString(), 1);
+        img_src_ = cv::imread(file_name_.toStdString(), 1);
 
-        if (!image.data)
+        if (!img_src_.data)
         {
             ROS_INFO("No image data");
             return;
         }
-        cv::namedWindow("Display Image", cv::WINDOW_AUTOSIZE);
-        cv::imshow("Display Image", image);
+        
+        int lowThreshold = 0;
+        const int max_lowThreshold = 100;
+        const char* window_name = "Edge Map";
+
+        img_dst_.create(img_src_.size(), img_src_.type());
+        cv::cvtColor(img_src_, img_src_gray_, cv::COLOR_BGR2GRAY);
+        cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE );
+        cv::createTrackbar("Min Threshold:", window_name, &lowThreshold, max_lowThreshold, trackbarCallback);
+        cannyThreshold(0);
 
         cv::waitKey(0);
+    }
+
+    // Callback for createTrackbar
+    // https://answers.opencv.org/question/214973/how-to-create-a-class-for-trackbars-in-general/
+    void Draw::trackbarCallback(int pos, void* usrptr)
+    {
+        // cast user data back to "this"
+        Draw* draw = (Draw*)usrptr;
+        draw->cannyThreshold(pos);
+    }
+
+    void Draw::cannyThreshold(int pos)
+    {
+        const int kernel_size = 3;
+        int lowThreshold = 0;
+        const int max_lowThreshold = 100;
+        const int ratio = 3;
+        const char* window_name = "Edge Map";
+
+        cv::blur(img_src_gray_, detected_edges_, cv::Size(3,3));
+        cv::Canny(detected_edges_, detected_edges_, lowThreshold, lowThreshold*ratio, kernel_size);
+        img_dst_ = cv::Scalar::all(0);
+        img_src_.copyTo(img_dst_, detected_edges_);
+        cv::imshow(window_name, img_dst_);
+
+        //cv::imshow("Display Image", image);
     }
 
 

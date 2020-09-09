@@ -6,6 +6,10 @@
 #include <actionlib/client/terminal_state.h>
 #include <turtle_actionlib/ShapeAction.h>
 
+//#include <opencv2/opencv.hpp>
+#include "opencv2/imgproc.hpp"
+#include "opencv2/highgui.hpp"
+
 #include <QDialog>
 
 namespace Ui {
@@ -27,6 +31,11 @@ namespace rqt_turtle {
 
         QString file_name_;
 
+        cv::Mat img_src_;
+        cv::Mat img_src_gray_;
+        cv::Mat img_dst_;
+        cv::Mat detected_edges_;
+
         // create the action client
         // true causes the client to spin its own thread
         // http://docs.ros.org/noetic/api/actionlib/html/classactionlib_1_1SimpleActionClient.html
@@ -36,6 +45,9 @@ namespace rqt_turtle {
         void drawImage();
 
         void setImage(const QImage &image);
+
+        void cannyThreshold(int pos);
+        static void trackbarCallback(int pos, void* usrptr);
 
     private slots:
         void on_btnDraw_clicked();
