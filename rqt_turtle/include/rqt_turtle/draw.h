@@ -35,6 +35,7 @@ namespace rqt_turtle {
         cv::Mat img_src_gray_;
         cv::Mat img_dst_;
         cv::Mat detected_edges_;
+        int lowThreshold_;
 
         // create the action client
         // true causes the client to spin its own thread

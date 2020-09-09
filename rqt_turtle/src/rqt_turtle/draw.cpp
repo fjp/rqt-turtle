@@ -103,14 +103,14 @@ namespace rqt_turtle {
             return;
         }
         
-        int lowThreshold = 0;
+        lowThreshold_ = 0;
         const int max_lowThreshold = 100;
         const char* window_name = "Edge Map";
 
         img_dst_.create(img_src_.size(), img_src_.type());
         cv::cvtColor(img_src_, img_src_gray_, cv::COLOR_BGR2GRAY);
         cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE );
-        cv::createTrackbar("Min Threshold:", window_name, &lowThreshold, max_lowThreshold, trackbarCallback);
+        cv::createTrackbar("Min Threshold:", window_name, &this->lowThreshold_, max_lowThreshold, Draw::trackbarCallback, (void*)(this));
         cannyThreshold(0);
 
         cv::waitKey(0);
@@ -128,13 +128,12 @@ namespace rqt_turtle {
     void Draw::cannyThreshold(int pos)
     {
         const int kernel_size = 3;
-        int lowThreshold = 0;
         const int max_lowThreshold = 100;
         const int ratio = 3;
         const char* window_name = "Edge Map";
 
         cv::blur(img_src_gray_, detected_edges_, cv::Size(3,3));
-        cv::Canny(detected_edges_, detected_edges_, lowThreshold, lowThreshold*ratio, kernel_size);
+        cv::Canny(detected_edges_, detected_edges_, lowThreshold_, lowThreshold_*ratio, kernel_size);
         img_dst_ = cv::Scalar::all(0);
         img_src_.copyTo(img_dst_, detected_edges_);
         cv::imshow(window_name, img_dst_);
