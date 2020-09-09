@@ -5,6 +5,8 @@
 #include <QMessageBox>
 #include <QImageReader>
 
+#include <opencv2/opencv.hpp>
+
 // ROS releated headers
 
 // Generated ui header
@@ -92,6 +94,19 @@ namespace rqt_turtle {
     void Draw::drawImage()
     {
         ROS_INFO("Find Contours");
+
+        cv::Mat image;
+        image = cv::imread(file_name_.toStdString(), 1);
+
+        if (!image.data)
+        {
+            ROS_INFO("No image data");
+            return;
+        }
+        cv::namedWindow("Display Image", cv::WINDOW_AUTOSIZE);
+        cv::imshow("Display Image", image);
+
+        cv::waitKey(0);
     }
 
 
