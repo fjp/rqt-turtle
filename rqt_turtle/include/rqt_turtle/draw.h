@@ -34,8 +34,8 @@ namespace rqt_turtle {
         cv::Mat img_src_;
         cv::Mat img_src_gray_;
         cv::Mat img_dst_;
-        cv::Mat detected_edges_;
-        int lowThreshold_;
+        cv::Mat img_canny_;
+        int low_threshold_;
 
         // create the action client
         // true causes the client to spin its own thread
@@ -46,6 +46,7 @@ namespace rqt_turtle {
         void drawImage();
 
         void setImage(const QImage &image);
+        void setEdgeImage(const cv::Mat& image);
 
         void cannyThreshold(int pos);
         static void trackbarCallback(int pos, void* usrptr);
@@ -55,6 +56,8 @@ namespace rqt_turtle {
         void on_btnCancel_clicked();
 
         void on_btnOpen_clicked();
+
+        void on_sliderLowThreshold_valueChanged(int low_threshold);
     };
 
 } // namespace

@@ -28,9 +28,11 @@ namespace rqt_turtle {
 
         ui_->setupUi(draw_dialog_);
 
-        connect(ui_->btnDraw, SIGNAL(clicked()), this, SLOT(on_btnDraw_clicked()));
-        connect(ui_->btnCancel, SIGNAL(clicked()), this, SLOT(on_btnCancel_clicked()));
+        //connect(ui_->btnDraw, SIGNAL(clicked()), this, SLOT(on_btnDraw_clicked()));
+        //connect(ui_->btnCancel, SIGNAL(clicked()), this, SLOT(on_btnCancel_clicked()));
         //connect(ui_->btnOpen, SIGNAL(clicked()), this, SLOT(on_btnOpen_clicked()));
+
+        
     }
 
     void Draw::on_btnDraw_clicked()
@@ -63,7 +65,7 @@ namespace rqt_turtle {
         file_name_ = QFileDialog::getOpenFileName(this,
             tr("Open Image"), QDir::homePath(), tr("Image Files (*.png *.jpg *.bmp)"));
 
-        ROS_INFO("file name %s", file_name_.toStdString().c_str());
+        ROS_INFO("File name %s", file_name_.toStdString().c_str());
 
         QImageReader reader(file_name_);
         reader.setAutoTransform(true);
@@ -76,6 +78,30 @@ namespace rqt_turtle {
         }
 
         setImage(image);
+
+        ROS_INFO("Find Contours");
+
+        img_src_ = cv::imread(file_name_.toStdString(), 1);
+
+        if (!img_src_.data)
+        {
+            ROS_INFO("No image data");
+            return;
+        }
+        
+        img_dst_.create(img_src_.size(), img_src_.type());
+        cv::cvtColor(img_src_, img_src_gray_, cv::COLOR_BGR2GRAY);
+        on_sliderLowThreshold_valueChanged(0);
+
+        connect(ui_->sliderLowThreshold, SIGNAL(valueChanged(int)), this, SLOT(on_sliderLowThreshold_valueChanged(int)));
+
+        //lowThreshold_ = 0;
+        //const int max_lowThreshold = 100;
+        //const char* window_name = "Edge Map";
+        //cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE );
+        //cv::createTrackbar("Min Threshold:", window_name, &this->lowThreshold_, max_lowThreshold, Draw::trackbarCallback, (void*)(this));
+        //cannyThreshold(0);
+        //cv::waitKey(0);
     }
 
     void Draw::setImage(const QImage &image)
@@ -91,54 +117,68 @@ namespace rqt_turtle {
         //ui_->lblImage->adjustSize();
     }
 
+    void Draw::setEdgeImage(const cv::Mat& image)
+    {
+        // Convert cv::Mat to QImage
+        // https://stackoverflow.com/questions/5026965/how-to-convert-an-opencv-cvmat-to-qimage
+        QImage img_detected_edges = QImage((uchar*) image.data, image.cols, image.rows, image.step, QImage::Format_RGB888);
+        ui_->lblEdgeImage->setPixmap(QPixmap::fromImage(img_detected_edges).scaledToWidth(ui_->lblImage->width()));
+    }
+
+    void Draw::on_sliderLowThreshold_valueChanged(int value)
+    {
+        /// Detect edges using Canny
+        cannyThreshold(value);
+        drawImage();
+    }
+
     void Draw::drawImage()
     {
-        ROS_INFO("Find Contours");
+        std::vector<std::vector<cv::Point> > contours;
+        std::vector<cv::Vec4i> hierarchy;
+        cv::RNG rng(12345);
 
-        img_src_ = cv::imread(file_name_.toStdString(), 1);
+        /// Find contours
+        cv::findContours(img_canny_, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
 
-        if (!img_src_.data)
+        /// Draw contours
+        cv::Mat drawing = cv::Mat::zeros(img_canny_.size(), CV_8UC3);
+        for(int i = 0; i < contours.size(); i++)
         {
-            ROS_INFO("No image data");
-            return;
+            cv::Scalar color = cv::Scalar(rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255));
+            cv::drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, cv::Point());
         }
-        
-        lowThreshold_ = 0;
-        const int max_lowThreshold = 100;
-        const char* window_name = "Edge Map";
 
-        img_dst_.create(img_src_.size(), img_src_.type());
-        cv::cvtColor(img_src_, img_src_gray_, cv::COLOR_BGR2GRAY);
-        cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE );
-        cv::createTrackbar("Min Threshold:", window_name, &this->lowThreshold_, max_lowThreshold, Draw::trackbarCallback, (void*)(this));
-        cannyThreshold(0);
+        setEdgeImage(drawing);
 
-        cv::waitKey(0);
     }
 
     // Callback for createTrackbar
     // https://answers.opencv.org/question/214973/how-to-create-a-class-for-trackbars-in-general/
-    void Draw::trackbarCallback(int pos, void* usrptr)
-    {
-        // cast user data back to "this"
-        Draw* draw = (Draw*)usrptr;
-        draw->cannyThreshold(pos);
-    }
+    //void Draw::trackbarCallback(int pos, void* usrptr)
+    //{
+    //    // cast user data back to "this"
+    //    Draw* draw = (Draw*)usrptr;
+    //    draw->cannyThreshold(pos);
+    //}
 
-    void Draw::cannyThreshold(int pos)
+    void Draw::cannyThreshold(int low_threshold)
     {
+        low_threshold_ = low_threshold;
         const int kernel_size = 3;
         const int max_lowThreshold = 100;
         const int ratio = 3;
-        const char* window_name = "Edge Map";
 
-        cv::blur(img_src_gray_, detected_edges_, cv::Size(3,3));
-        cv::Canny(detected_edges_, detected_edges_, lowThreshold_, lowThreshold_*ratio, kernel_size);
-        img_dst_ = cv::Scalar::all(0);
-        img_src_.copyTo(img_dst_, detected_edges_);
-        cv::imshow(window_name, img_dst_);
+        cv::blur(img_src_gray_, img_canny_, cv::Size(3,3));
+        cv::Canny(img_canny_, img_canny_, low_threshold_, low_threshold_*ratio, kernel_size);
 
-        //cv::imshow("Display Image", image);
+        //img_dst_ = cv::Scalar::all(0);
+        //img_src_.copyTo(img_dst_, img_canny_);
+
+        //setEdgeImage(img_dst_);
+        
+        //const char* window_name = "Edge Map";
+        //cv::imshow(window_name, img_dst_);
     }
 
 
