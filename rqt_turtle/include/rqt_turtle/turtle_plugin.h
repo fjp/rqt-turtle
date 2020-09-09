@@ -2,9 +2,6 @@
 #define rqt_turtle__turtle_plugin_H
 
 #include <rqt_gui_cpp/plugin.h>
-#include <actionlib/client/simple_action_client.h>
-#include <actionlib/client/terminal_state.h>
-#include <turtle_actionlib/ShapeAction.h>
 
 #include <QWidget>
 #include <QSharedPointer>
@@ -57,12 +54,6 @@ namespace rqt_turtle {
 
         // Vector to keep track of all turtles (keep turtles on the heap using vector of shared pointers)
         QMap<QString, QSharedPointer<Turtle> > turtles_;
-
-
-        // create the action client
-        // true causes the client to spin its own thread
-        // http://docs.ros.org/noetic/api/actionlib/html/classactionlib_1_1SimpleActionClient.html
-        actionlib::SimpleActionClient<turtle_actionlib::ShapeAction> ac_;
 
 
         /**

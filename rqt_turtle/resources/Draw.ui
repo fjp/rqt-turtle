@@ -31,13 +31,6 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="lblRadius">
-         <property name="text">
-          <string>Radius</string>
-         </property>
-        </widget>
-       </item>
        <item row="0" column="1">
         <widget class="QLineEdit" name="lineEditEdges">
          <property name="text">
@@ -45,10 +38,31 @@
          </property>
         </widget>
        </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="lblRadius">
+         <property name="text">
+          <string>Radius</string>
+         </property>
+        </widget>
+       </item>
        <item row="2" column="1">
         <widget class="QLineEdit" name="lineEditRadius">
          <property name="text">
           <string>1.5</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="lblTimeout">
+         <property name="text">
+          <string>Time out</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="lineEditTimeout">
+         <property name="text">
+          <string>30.0</string>
          </property>
         </widget>
        </item>
@@ -64,7 +78,7 @@
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
-         <widget class="QWidget" name="">
+         <widget class="QWidget" name="layoutWidget">
           <layout class="QVBoxLayout" name="verticalLayout_2">
            <item>
             <widget class="QPushButton" name="btnOpen">

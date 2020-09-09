@@ -4,7 +4,6 @@
 #include <QColorDialog>
 #include <QVariantMap>
 #include <QTreeWidgetItem>
-#include <QMessageBox>
 
 #include <std_srvs/Empty.h>
 #include <turtlesim/Spawn.h>
@@ -29,7 +28,6 @@ namespace rqt_turtle {
         : rqt_gui_cpp::Plugin()
         , m_pUi(new Ui::TurtlePluginWidget)
         , m_pWidget(0)
-        , ac_("turtle_shape", true)
     {
         // Constructor is called first before initPlugin function, needless to say.
 
@@ -218,47 +216,8 @@ namespace rqt_turtle {
         bool ok = draw_dialog_->exec() == QDialog::Accepted;
 
 
-        ROS_INFO("Waiting for action server to start.");
-
-        if (!ac_.isServerConnected())
-        {
-            QMessageBox msgBox;
-            msgBox.setText("Waiting for action server to start");
-            msgBox.setInformativeText("Please run 'rosrun turtle_actionlib shape_server' and press Ok or cancel \
-                                       to avoid blocking rqt_turtle gui while wating for shape_server.");
-            msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
-            int ret = msgBox.exec();
-            if (ret == QMessageBox::Cancel)
-            {
-                return;
-            }
-        }
         
-        // wait for the action server to start
-        ac_.waitForServer(); //will wait for infinite time
-
-        ROS_INFO("Action server started, sending goal.");
-        // send a goal to the action
-        turtle_actionlib::ShapeGoal shape;
-        shape.edges = 3;
-        shape.radius = 2.0;
-        ac_.sendGoal(shape);
-
-        //wait for the action to return
-        bool finished_before_timeout = ac_.waitForResult(ros::Duration(30.0));
-
-
-        if (finished_before_timeout)
-        {
-            actionlib::SimpleClientGoalState state = ac_.getState();
-            ROS_INFO("Action finished: %s",state.toString().c_str());
-        }
-        else
-            ROS_INFO("Action did not finish before the time out.");
-
-        //exit
-        return; // TODO fix
-
+        // Remove ?
         auto list = m_pUi->treeTurtles->selectedItems();
         ROS_INFO("%d", list.size());
         if (list.size() > 0)
