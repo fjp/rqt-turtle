@@ -25,6 +25,8 @@ namespace rqt_turtle {
     public:
         Draw(QWidget* parent);
 
+        inline std::vector<std::vector<cv::Point> > contours() { return contours_; };
+
     private:
         Ui::DrawWidget* ui_;
         QDialog* draw_dialog_;
@@ -33,9 +35,10 @@ namespace rqt_turtle {
 
         cv::Mat img_src_;
         cv::Mat img_src_gray_;
-        cv::Mat img_dst_;
         cv::Mat img_canny_;
         int low_threshold_;
+
+        std::vector<std::vector<cv::Point> > contours_;
 
         // create the action client
         // true causes the client to spin its own thread

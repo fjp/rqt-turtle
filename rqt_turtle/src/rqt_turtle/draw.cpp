@@ -89,9 +89,9 @@ namespace rqt_turtle {
             return;
         }
         
-        img_dst_.create(img_src_.size(), img_src_.type());
+        //img_dst_.create(img_src_.size(), img_src_.type());
         cv::cvtColor(img_src_, img_src_gray_, cv::COLOR_BGR2GRAY);
-        on_sliderLowThreshold_valueChanged(0);
+        on_sliderLowThreshold_valueChanged(50);
 
         connect(ui_->sliderLowThreshold, SIGNAL(valueChanged(int)), this, SLOT(on_sliderLowThreshold_valueChanged(int)));
 
@@ -134,23 +134,23 @@ namespace rqt_turtle {
 
     void Draw::drawImage()
     {
-        std::vector<std::vector<cv::Point> > contours;
+        // https://docs.opencv.org/2.4/doc/tutorials/imgproc/shapedescriptors/find_contours/find_contours.html
         std::vector<cv::Vec4i> hierarchy;
         cv::RNG rng(12345);
 
         /// Find contours
-        cv::findContours(img_canny_, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+        cv::findContours(img_canny_, contours_, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
 
         /// Draw contours
         cv::Mat drawing = cv::Mat::zeros(img_canny_.size(), CV_8UC3);
-        for(int i = 0; i < contours.size(); i++)
+        ROS_INFO("Low threshold %d yields %d contours", low_threshold_, (int)contours_.size());
+        for(int i = 0; i < contours_.size(); i++)
         {
             cv::Scalar color = cv::Scalar(rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255));
-            cv::drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, cv::Point());
+            cv::drawContours(drawing, contours_, i, color, 2, 8, hierarchy, 0, cv::Point());
         }
 
         setEdgeImage(drawing);
-
     }
 
     // Callback for createTrackbar
@@ -171,14 +171,6 @@ namespace rqt_turtle {
 
         cv::blur(img_src_gray_, img_canny_, cv::Size(3,3));
         cv::Canny(img_canny_, img_canny_, low_threshold_, low_threshold_*ratio, kernel_size);
-
-        //img_dst_ = cv::Scalar::all(0);
-        //img_src_.copyTo(img_dst_, img_canny_);
-
-        //setEdgeImage(img_dst_);
-        
-        //const char* window_name = "Edge Map";
-        //cv::imshow(window_name, img_dst_);
     }
 
 

@@ -9,6 +9,8 @@
 
 #include <rqt_turtle/turtle.h>
 
+#include <opencv2/core/types.hpp>
+
 
 class QListWidgetItem;
 
@@ -70,10 +72,14 @@ namespace rqt_turtle {
          */
         QVariantMap teleport(std::string teleport_type);
 
+        void setPen(QSharedPointer<Turtle> turtle);
+
         void updateTurtleTree();
 
 
         inline std::string str(QString qstr) { return qstr.toStdString(); };
+
+        void DrawImage(std::vector<std::vector<cv::Point> >& contours);
 
 
     private slots:
