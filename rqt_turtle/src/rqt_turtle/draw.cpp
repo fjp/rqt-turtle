@@ -1,7 +1,9 @@
 #include "rqt_turtle/draw.h"
 
 #include <QDialog>
+#include <QFileDialog>
 #include <QMessageBox>
+#include <QImageReader>
 
 // ROS releated headers
 
@@ -26,7 +28,7 @@ namespace rqt_turtle {
 
         connect(ui_->btnDraw, SIGNAL(clicked()), this, SLOT(on_btnDraw_clicked()));
         connect(ui_->btnCancel, SIGNAL(clicked()), this, SLOT(on_btnCancel_clicked()));
-        connect(ui_->btnOpen, SIGNAL(clicked()), this, SLOT(on_btnOpen_clicked()));
+        //connect(ui_->btnOpen, SIGNAL(clicked()), this, SLOT(on_btnOpen_clicked()));
     }
 
     void Draw::on_btnDraw_clicked()
@@ -35,6 +37,11 @@ namespace rqt_turtle {
         {
             ROS_INFO("Draw Shape");
             drawShape();
+        }
+        if (ui_->tabs->currentWidget() == ui_->tabImage)
+        {
+            ROS_INFO("Draw Image");
+            drawImage();
         }
 
         accept();
@@ -50,6 +57,41 @@ namespace rqt_turtle {
     void Draw::on_btnOpen_clicked()
     {
         ROS_INFO("Open clicked");
+
+        file_name_ = QFileDialog::getOpenFileName(this,
+            tr("Open Image"), QDir::homePath(), tr("Image Files (*.png *.jpg *.bmp)"));
+
+        ROS_INFO("file name %s", file_name_.toStdString().c_str());
+
+        QImageReader reader(file_name_);
+        reader.setAutoTransform(true);
+        const QImage image = reader.read();
+        if (image.isNull()) {
+            QMessageBox::information(this, QGuiApplication::applicationDisplayName(),
+                                    tr("Cannot load %1: %2")
+                                    .arg(QDir::toNativeSeparators(file_name_), reader.errorString()));
+            return;// false;
+        }
+
+        setImage(image);
+    }
+
+    void Draw::setImage(const QImage &image)
+    {
+        //image_ = image;
+        ui_->lblImage->setPixmap(QPixmap::fromImage(image).scaledToWidth(ui_->lblImage->width()));
+        //ui_->lblImage->setScaledContents(true);
+        //float scaleFactor = 0.5;
+
+        //ui_->lblImage->resize(scaleFactor * ui_->lblImage->pixmap()->size());
+
+        //if (!fitToWindowAct->isChecked())
+        //ui_->lblImage->adjustSize();
+    }
+
+    void Draw::drawImage()
+    {
+        ROS_INFO("Find Contours");
     }
 
 

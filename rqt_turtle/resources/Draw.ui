@@ -17,7 +17,7 @@
    <item>
     <widget class="QTabWidget" name="tabs">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tabTurtleAction">
       <attribute name="title">
@@ -96,7 +96,7 @@
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
-          <widget class="QLabel" name="lblOriginalImage">
+          <widget class="QLabel" name="lblImage">
            <property name="text">
             <string>Original Image</string>
            </property>

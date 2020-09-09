@@ -25,12 +25,17 @@ namespace rqt_turtle {
         Ui::DrawWidget* ui_;
         QDialog* draw_dialog_;
 
+        QString file_name_;
+
         // create the action client
         // true causes the client to spin its own thread
         // http://docs.ros.org/noetic/api/actionlib/html/classactionlib_1_1SimpleActionClient.html
         actionlib::SimpleActionClient<turtle_actionlib::ShapeAction> ac_;
 
         void drawShape();
+        void drawImage();
+
+        void setImage(const QImage &image);
 
     private slots:
         void on_btnDraw_clicked();
