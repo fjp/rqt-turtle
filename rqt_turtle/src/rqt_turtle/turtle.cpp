@@ -11,10 +11,10 @@ Turtle::Turtle(std::string name)
     pose_.y = 0.0;
     pose_.theta = 0.0;
 
-    pen_.r = 0;
-    pen_.g = 0;
-    pen_.b = 0;
-    pen_.width = 0;
+    pen_.r = DEFAULT_PEN_R;
+    pen_.g = DEFAULT_PEN_G;
+    pen_.b = DEFAULT_PEN_B;
+    pen_.width = DEFAULT_PEN_WIDTH;
     pen_.off = false;
 }
 
@@ -40,10 +40,10 @@ Turtle::Turtle(std::string name, turtlesim::Pose pose)
 
     pose_ = pose;
 
-    pen_.r = 100;
-    pen_.g = 100;
-    pen_.b = 100;
-    pen_.width = 1;
+    pen_.r = DEFAULT_PEN_R;
+    pen_.g = DEFAULT_PEN_G;
+    pen_.b = DEFAULT_PEN_B;
+    pen_.width = DEFAULT_PEN_WIDTH;
     pen_.off = false;
 }
 

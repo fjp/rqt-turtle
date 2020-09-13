@@ -33,7 +33,7 @@ namespace rqt_turtle {
         //connect(ui_->btnCancel, SIGNAL(clicked()), this, SLOT(on_btnCancel_clicked()));
         //connect(ui_->btnOpen, SIGNAL(clicked()), this, SLOT(on_btnOpen_clicked()));
 
-        turtlesim_size_ = 500;
+        turtlesim_size_ = 500.0;
     }
 
     void Draw::setTurtleWorkers(QVector<QString> turtle_workers)
@@ -41,6 +41,37 @@ namespace rqt_turtle {
         /// Fill list with selected turtles which will be used as workers
         turtle_workers_ = turtle_workers;
         ui_->listWorkers->addItems(turtle_workers.toList());
+    }
+
+    // https://stackoverflow.com/questions/28562401/resize-an-image-to-a-square-but-keep-aspect-ratio-c-opencv
+    cv::Mat Draw::resizeImage(const cv::Mat& img)
+    {
+        int width = img.cols,
+        height = img.rows;
+
+        cv::Mat square = cv::Mat::zeros(turtlesim_size_, turtlesim_size_, img.type());
+
+        int max_dim = (width >= height) ? width : height;
+        float scale = ((float) turtlesim_size_) / max_dim;
+        cv::Rect roi;
+        if (width >= height)
+        {
+            roi.width = turtlesim_size_;
+            roi.x = 0;
+            roi.height = height * scale;
+            roi.y = (turtlesim_size_ - roi.height) / 2;
+        }
+        else
+        {
+            roi.y = 0;
+            roi.height = turtlesim_size_;
+            roi.width = width * scale;
+            roi.x = (turtlesim_size_ - roi.width) / 2;
+        }
+
+        cv::resize(img, square(roi), roi.size());
+
+        return square;
     }
 
     void Draw::on_btnDraw_clicked()
@@ -90,11 +121,16 @@ namespace rqt_turtle {
         ROS_INFO("Find Contours");
 
         img_src_ = cv::imread(file_name_.toStdString(), 1);
+        img_src_ = resizeImage(img_src_);
 
         if (!img_src_.data)
         {
             ROS_INFO("No image data");
             return;
+        }
+        else
+        {
+            ROS_INFO("Image rows, cols: %d, %d", img_src_.rows, img_src_.cols);
         }
         
         //img_dst_.create(img_src_.size(), img_src_.type());
@@ -179,8 +215,11 @@ namespace rqt_turtle {
             int idxp = 0;
             for (auto point : contour)
             {
-                sTeleportAbsolute.request.x = point.x;// * 0.01;
-                sTeleportAbsolute.request.y = point.y;// * 0.01;
+                /// Normalize to turtle coordinates and flip on horizontal axis
+                sTeleportAbsolute.request.x = point.x / turtlesim_size_ * 11.0;
+                sTeleportAbsolute.request.y = (point.y / turtlesim_size_ * 11.0) - 11.0 / 2.0;
+                sTeleportAbsolute.request.y = sTeleportAbsolute.request.y * -1.0;
+                sTeleportAbsolute.request.y = sTeleportAbsolute.request.y + 11.0 / 2.0;
                 sTeleportAbsolute.request.theta = 0.0; // todo use two points to calculate angle
 
                 if ((idx+idxp) % 100 == 0)

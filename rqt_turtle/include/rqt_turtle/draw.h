@@ -33,7 +33,7 @@ namespace rqt_turtle {
         QDialog* draw_dialog_;
 
         QString file_name_;
-        int turtlesim_size_ = 500;
+        float turtlesim_size_;
 
         cv::Mat img_src_;
         cv::Mat img_src_gray_;
@@ -48,6 +48,8 @@ namespace rqt_turtle {
         // true causes the client to spin its own thread
         // http://docs.ros.org/noetic/api/actionlib/html/classactionlib_1_1SimpleActionClient.html
         actionlib::SimpleActionClient<turtle_actionlib::ShapeAction> ac_;
+
+        cv::Mat resizeImage(const cv::Mat& img);
 
         void drawShape();
         void previewEdgeImage();
