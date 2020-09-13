@@ -1,5 +1,7 @@
 #include <rqt_turtle/turtle.h>
 
+#include <turtlesim/SetPen.h>
+
 
 Turtle::Turtle(std::string name)
 {
@@ -63,4 +65,20 @@ QTreeWidgetItem* Turtle::toTreeItem(QTreeWidget* parent)
     item->setText(3, QString::number(pose_.theta));
     item->setText(4, pen_.off ? QString("off") : QString("on"));
     return item;
+}
+
+
+void Turtle::setPen(bool off)
+{
+    pen_.off = off;
+
+    turtlesim::SetPen set_pen;
+    set_pen.request.r = pen_.r;
+    set_pen.request.g = pen_.g;
+    set_pen.request.b = pen_.b;
+    set_pen.request.width = pen_.width;
+    set_pen.request.off = pen_.off;
+
+    std::string service_name = "/" + name_ + "/set_pen";
+    ros::service::call<turtlesim::SetPen>(service_name, set_pen);
 }

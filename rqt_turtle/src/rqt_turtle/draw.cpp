@@ -5,7 +5,7 @@
 #include <QMessageBox>
 #include <QImageReader>
 
-
+#include <turtlesim/TeleportAbsolute.h>
 
 // ROS releated headers
 
@@ -16,10 +16,11 @@
 
 namespace rqt_turtle {
 
-    Draw::Draw(QWidget* parent)
+    Draw::Draw(QWidget* parent, QMap<QString, QSharedPointer<Turtle>>& turtles)
         : ui_(new Ui::DrawWidget)
         , draw_dialog_(this)
         , ac_("turtle_shape", true)
+        , turtles_(turtles)
     {
         // give QObjects reasonable names
         setObjectName("Draw");
@@ -32,7 +33,14 @@ namespace rqt_turtle {
         //connect(ui_->btnCancel, SIGNAL(clicked()), this, SLOT(on_btnCancel_clicked()));
         //connect(ui_->btnOpen, SIGNAL(clicked()), this, SLOT(on_btnOpen_clicked()));
 
-        
+        turtlesim_size_ = 500;
+    }
+
+    void Draw::setTurtleWorkers(QVector<QString> turtle_workers)
+    {
+        /// Fill list with selected turtles which will be used as workers
+        turtle_workers_ = turtle_workers;
+        ui_->listWorkers->addItems(turtle_workers.toList());
     }
 
     void Draw::on_btnDraw_clicked()
@@ -107,7 +115,9 @@ namespace rqt_turtle {
     void Draw::setImage(const QImage &image)
     {
         //image_ = image;
-        ui_->lblImage->setPixmap(QPixmap::fromImage(image).scaledToWidth(ui_->lblImage->width()));
+        //ui_->lblImage->setPixmap(QPixmap::fromImage(image).scaledToWidth(ui_->lblImage->width()));
+        ui_->lblImage->setPixmap(QPixmap::fromImage(image)
+            .scaled(QSize(turtlesim_size_, turtlesim_size_), Qt::KeepAspectRatio));
         //ui_->lblImage->setScaledContents(true);
         //float scaleFactor = 0.5;
 
@@ -122,17 +132,18 @@ namespace rqt_turtle {
         // Convert cv::Mat to QImage
         // https://stackoverflow.com/questions/5026965/how-to-convert-an-opencv-cvmat-to-qimage
         QImage img_detected_edges = QImage((uchar*) image.data, image.cols, image.rows, image.step, QImage::Format_RGB888);
-        ui_->lblEdgeImage->setPixmap(QPixmap::fromImage(img_detected_edges).scaledToWidth(ui_->lblImage->width()));
+        ui_->lblEdgeImage->setPixmap(QPixmap::fromImage(img_detected_edges)
+            .scaled(QSize(turtlesim_size_, turtlesim_size_), Qt::KeepAspectRatio));
     }
 
     void Draw::on_sliderLowThreshold_valueChanged(int value)
     {
         /// Detect edges using Canny
         cannyThreshold(value);
-        drawImage();
+        previewEdgeImage();
     }
 
-    void Draw::drawImage()
+    void Draw::previewEdgeImage()
     {
         // https://docs.opencv.org/2.4/doc/tutorials/imgproc/shapedescriptors/find_contours/find_contours.html
         std::vector<cv::Vec4i> hierarchy;
@@ -153,14 +164,39 @@ namespace rqt_turtle {
         setEdgeImage(drawing);
     }
 
-    // Callback for createTrackbar
-    // https://answers.opencv.org/question/214973/how-to-create-a-class-for-trackbars-in-general/
-    //void Draw::trackbarCallback(int pos, void* usrptr)
-    //{
-    //    // cast user data back to "this"
-    //    Draw* draw = (Draw*)usrptr;
-    //    draw->cannyThreshold(pos);
-    //}
+    void Draw::drawImage()
+    {
+        auto turtle = turtles_[QString("turtle1")];
+
+        turtlesim::TeleportAbsolute sTeleportAbsolute;
+        int num_contours =(int)contours_.size();
+        int idx = 0;
+        ROS_INFO("Draw Image with %d contours", num_contours);
+        for (auto contour : contours_)
+        {
+            ROS_INFO("Drawing contour %d of %d", idx, num_contours);
+            turtle->setPen(true);
+            int idxp = 0;
+            for (auto point : contour)
+            {
+                sTeleportAbsolute.request.x = point.x;// * 0.01;
+                sTeleportAbsolute.request.y = point.y;// * 0.01;
+                sTeleportAbsolute.request.theta = 0.0; // todo use two points to calculate angle
+
+                if ((idx+idxp) % 100 == 0)
+                {
+                    ROS_INFO("Point (x,y)= (%f,%f)", sTeleportAbsolute.request.x, sTeleportAbsolute.request.y);
+                }
+                
+                ros::service::call<turtlesim::TeleportAbsolute>("/turtle1/teleport_absolute", sTeleportAbsolute);
+                auto response = sTeleportAbsolute.response;
+                turtle->setPen(false);
+
+                idxp++;
+            }
+            idx++;
+        }
+    }
 
     void Draw::cannyThreshold(int low_threshold)
     {
@@ -172,8 +208,6 @@ namespace rqt_turtle {
         cv::blur(img_src_gray_, img_canny_, cv::Size(3,3));
         cv::Canny(img_canny_, img_canny_, low_threshold_, low_threshold_*ratio, kernel_size);
     }
-
-
 
     void Draw::drawShape()
     {

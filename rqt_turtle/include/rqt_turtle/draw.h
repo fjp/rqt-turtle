@@ -6,11 +6,12 @@
 #include <actionlib/client/terminal_state.h>
 #include <turtle_actionlib/ShapeAction.h>
 
-//#include <opencv2/opencv.hpp>
 #include "opencv2/imgproc.hpp"
 #include "opencv2/highgui.hpp"
 
 #include <QDialog>
+
+#include <rqt_turtle/turtle.h>
 
 namespace Ui {
     class DrawWidget;
@@ -23,21 +24,24 @@ namespace rqt_turtle {
     {
         Q_OBJECT
     public:
-        Draw(QWidget* parent);
+        Draw(QWidget* parent, QMap<QString, QSharedPointer<Turtle>>& turtles);
 
-        inline std::vector<std::vector<cv::Point> > contours() { return contours_; };
+        void setTurtleWorkers(QVector<QString> turtle_workers);
 
     private:
         Ui::DrawWidget* ui_;
         QDialog* draw_dialog_;
 
         QString file_name_;
+        int turtlesim_size_ = 500;
 
         cv::Mat img_src_;
         cv::Mat img_src_gray_;
         cv::Mat img_canny_;
         int low_threshold_;
 
+        QMap<QString, QSharedPointer<Turtle>>& turtles_;
+        QVector<QString> turtle_workers_;
         std::vector<std::vector<cv::Point> > contours_;
 
         // create the action client
@@ -46,13 +50,13 @@ namespace rqt_turtle {
         actionlib::SimpleActionClient<turtle_actionlib::ShapeAction> ac_;
 
         void drawShape();
+        void previewEdgeImage();
         void drawImage();
 
         void setImage(const QImage &image);
         void setEdgeImage(const cv::Mat& image);
 
         void cannyThreshold(int pos);
-        static void trackbarCallback(int pos, void* usrptr);
 
     private slots:
         void on_btnDraw_clicked();

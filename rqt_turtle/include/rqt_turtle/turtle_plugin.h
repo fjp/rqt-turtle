@@ -79,9 +79,6 @@ namespace rqt_turtle {
 
         inline std::string str(QString qstr) { return qstr.toStdString(); };
 
-        void DrawImage(std::vector<std::vector<cv::Point> >& contours);
-
-
     private slots:
         /**
          * @brief Callback for Reset push button

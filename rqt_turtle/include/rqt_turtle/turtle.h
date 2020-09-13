@@ -1,3 +1,6 @@
+#ifndef rqt_turtle__turtle_H
+#define rqt_turtle__turtle_H
+
 #include <ros/ros.h>
 
 #include <QTreeWidgetItem>
@@ -16,8 +19,12 @@ public:
 
     QTreeWidgetItem* toTreeItem(QTreeWidget* parent);
 
+    void setPen(bool off);
+
     std::string name_;
     turtlesim::Pose pose_;
     turtlesim::SetPenRequest pen_;
 
 };
+
+#endif // rqt_turtle__turtle_H

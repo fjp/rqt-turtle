@@ -212,10 +212,16 @@ namespace rqt_turtle {
 
     void TurtlePlugin::on_btnDraw_clicked()
     {
-        draw_dialog_ = new Draw(m_pWidget);
-        bool ok = draw_dialog_->exec() == QDialog::Accepted;
+        draw_dialog_ = new Draw(m_pWidget, turtles_);
+
+        draw_dialog_->setTurtleWorkers(selected_turtles_);
+
+        draw_dialog_->open();
+        //bool ok = draw_dialog_->exec() == QDialog::Accepted;
+        bool ok = true;
 
         // Remove ?
+        /*
         auto list = m_pUi->treeTurtles->selectedItems();
         ROS_INFO("%d", list.size());
         if (list.size() > 0)
@@ -225,42 +231,7 @@ namespace rqt_turtle {
             ROS_INFO("Found %d contours", (int)contours.size());
             DrawImage(contours);
         }
-    }
-
-    void TurtlePlugin::DrawImage(std::vector<std::vector<cv::Point> >& contours)
-    {
-        auto turtle = turtles_[QString("turtle1")];
-
-        turtlesim::TeleportAbsolute sTeleportAbsolute;
-        int num_contours =(int)contours.size();
-        int idx = 0;
-        ROS_INFO("Draw Image with %d contours", num_contours);
-        for (auto contour : contours)
-        {
-            ROS_INFO("Drawing contour %d of %d", idx, num_contours);
-            turtle->pen_.off = true;
-            setPen(turtle);
-            int idxp = 0;
-            for (auto point : contour)
-            {
-                sTeleportAbsolute.request.x = point.x * 0.01;
-                sTeleportAbsolute.request.y = point.y * 0.01;
-                sTeleportAbsolute.request.theta = 0.0; // todo use two points to calculate angle
-
-                if ((idx+idxp) % 100 == 0)
-                {
-                    ROS_INFO("Point (x,y)= (%f,%f)", sTeleportAbsolute.request.x, sTeleportAbsolute.request.y);
-                }
-                
-                ros::service::call<turtlesim::TeleportAbsolute>("/turtle1/teleport_absolute", sTeleportAbsolute);
-                auto response = sTeleportAbsolute.response;
-                turtle->pen_.off = false;
-                setPen(turtle);
-
-                idxp++;
-            }
-            idx++;
-        }
+        */
     }
 
     void TurtlePlugin::on_btnKill_clicked()
@@ -405,14 +376,13 @@ namespace rqt_turtle {
             QSharedPointer<Turtle> turtle = turtles_[selected_turtle];
             if (turtle->pen_.off)
             {
-                turtle->pen_.off = false;
+                turtle->setPen(false);
             }
             else
             {
-                turtle->pen_.off = true;
+                turtle->setPen(true);
             }
             
-            setPen(turtle);
             ROS_INFO("Set pen for turtle %s: %s", turtle->name_.c_str(), turtle->pen_.off ? "Off" : "On");
         }
     }
