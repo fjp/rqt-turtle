@@ -114,6 +114,7 @@ set(rqt_turtle_SRCS
   src/rqt_turtle/service_caller.cpp
   src/rqt_turtle/draw.cpp
   src/rqt_turtle/turtle.cpp
+  src/rqt_turtle/worker.cpp
 )
 
 set(rqt_turtle_HDRS
@@ -121,12 +122,14 @@ set(rqt_turtle_HDRS
   include/rqt_turtle/service_caller.h
   include/rqt_turtle/draw.h
   include/rqt_turtle/turtle.h
+  include/rqt_turtle/worker.h
 )
 
 set(rqt_turtle_UIS
   resources/turtle_plugin.ui
   resources/ServiceCaller.ui
   resources/Draw.ui
+  resources/Task.ui
 )
 
 set(rqt_turtle_INCLUDE_DIRECTORIES

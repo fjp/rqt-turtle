@@ -11,6 +11,10 @@
 
 // Generated ui header
 #include "ui_Draw.h"
+#include "ui_Task.h"
+
+
+#include <rqt_turtle/worker.h>
 
 
 
@@ -18,7 +22,9 @@ namespace rqt_turtle {
 
     Draw::Draw(QWidget* parent, QMap<QString, QSharedPointer<Turtle>>& turtles)
         : ui_(new Ui::DrawWidget)
+        , ui_task_(new Ui::TaskWidget)
         , draw_dialog_(this)
+        , task_dialog_(new QDialog(this))
         , ac_("turtle_shape", true)
         , turtles_(turtles)
     {
@@ -26,8 +32,9 @@ namespace rqt_turtle {
         setObjectName("Draw");
 
         ROS_INFO("Initialize Draw Dialog");
-
         ui_->setupUi(draw_dialog_);
+        ROS_INFO("Initialize Task Dialog");
+        ui_task_->setupUi(task_dialog_);
 
         //connect(ui_->btnDraw, SIGNAL(clicked()), this, SLOT(on_btnDraw_clicked()));
         //connect(ui_->btnCancel, SIGNAL(clicked()), this, SLOT(on_btnCancel_clicked()));
@@ -202,40 +209,21 @@ namespace rqt_turtle {
 
     void Draw::drawImage()
     {
+        
         auto turtle = turtles_[QString("turtle1")];
 
-        turtlesim::TeleportAbsolute sTeleportAbsolute;
-        int num_contours =(int)contours_.size();
-        int idx = 0;
-        ROS_INFO("Draw Image with %d contours", num_contours);
-        for (auto contour : contours_)
-        {
-            ROS_INFO("Drawing contour %d of %d", idx, num_contours);
-            turtle->setPen(true);
-            int idxp = 0;
-            for (auto point : contour)
-            {
-                /// Normalize to turtle coordinates and flip on horizontal axis
-                sTeleportAbsolute.request.x = point.x / turtlesim_size_ * 11.0;
-                sTeleportAbsolute.request.y = (point.y / turtlesim_size_ * 11.0) - 11.0 / 2.0;
-                sTeleportAbsolute.request.y = sTeleportAbsolute.request.y * -1.0;
-                sTeleportAbsolute.request.y = sTeleportAbsolute.request.y + 11.0 / 2.0;
-                sTeleportAbsolute.request.theta = 0.0; // todo use two points to calculate angle
+        JobRunner* runner = new JobRunner(*turtle, contours_, 500);
 
-                if ((idx+idxp) % 100 == 0)
-                {
-                    ROS_INFO("Point (x,y)= (%f,%f)", sTeleportAbsolute.request.x, sTeleportAbsolute.request.y);
-                }
-                
-                ros::service::call<turtlesim::TeleportAbsolute>("/turtle1/teleport_absolute", sTeleportAbsolute);
-                auto response = sTeleportAbsolute.response;
-                turtle->setPen(false);
+        connect(runner, SIGNAL(progress(int)), ui_task_->progressBar, SLOT(setValue(int)));
+        connect(ui_task_->btnCancel, SIGNAL(clicked()), runner, SLOT(kill()));
+        connect(ui_task_->btnCancel, SIGNAL(clicked()), task_dialog_, SLOT(reject()));
+        
+        threadpool_.start(runner);
 
-                idxp++;
-            }
-            idx++;
-        }
+        task_dialog_->open();
     }
+
+
 
     void Draw::cannyThreshold(int low_threshold)
     {

@@ -10,11 +10,13 @@
 #include "opencv2/highgui.hpp"
 
 #include <QDialog>
+#include <QThreadPool>
 
 #include <rqt_turtle/turtle.h>
 
 namespace Ui {
     class DrawWidget;
+    class TaskWidget;
 }
 
 namespace rqt_turtle {
@@ -32,6 +34,9 @@ namespace rqt_turtle {
         Ui::DrawWidget* ui_;
         QDialog* draw_dialog_;
 
+        Ui::TaskWidget* ui_task_;
+        QDialog* task_dialog_;
+
         QString file_name_;
         float turtlesim_size_;
 
@@ -48,6 +53,8 @@ namespace rqt_turtle {
         // true causes the client to spin its own thread
         // http://docs.ros.org/noetic/api/actionlib/html/classactionlib_1_1SimpleActionClient.html
         actionlib::SimpleActionClient<turtle_actionlib::ShapeAction> ac_;
+
+        QThreadPool threadpool_;
 
         cv::Mat resizeImage(const cv::Mat& img);
 
