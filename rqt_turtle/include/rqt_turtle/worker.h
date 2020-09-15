@@ -25,7 +25,7 @@ namespace rqt_turtle {
 
         bool is_killed_;
 
-        Turtle& turtle_;
+        Turtle turtle_;
         std::vector<std::vector<cv::Point> > contours_;
         int num_contours_;
         int idx_contour_;
@@ -36,7 +36,7 @@ namespace rqt_turtle {
         turtlesim::TeleportAbsolute sTeleportAbs_;
 
     public:
-        JobRunner(Turtle& turtle, std::vector<std::vector<cv::Point> > contours, float turtlesim_size = 500.0);
+        JobRunner(Turtle turtle, std::vector<std::vector<cv::Point> > contours, float turtlesim_size = 500.0);
 
 
         void run() override;

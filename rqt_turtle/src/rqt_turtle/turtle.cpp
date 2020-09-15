@@ -22,6 +22,9 @@ Turtle::Turtle(std::string name)
 Turtle::Turtle(std::string name, float x, float y, float theta, 
     uint8_t r, uint8_t g, uint8_t b, uint8_t width, bool off)
 {
+    ROS_INFO("Created Turlte %s", name.c_str());
+    name_ = name;
+
     pose_.x = x;
     pose_.y = y;
     pose_.theta = theta;

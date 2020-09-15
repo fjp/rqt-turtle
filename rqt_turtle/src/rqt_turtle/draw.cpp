@@ -6,6 +6,7 @@
 #include <QImageReader>
 
 #include <turtlesim/TeleportAbsolute.h>
+#include <turtlesim/Spawn.h>
 
 // ROS releated headers
 
@@ -87,6 +88,7 @@ namespace rqt_turtle {
         {
             ROS_INFO("Draw Shape");
             drawShape();
+            accept();
         }
         if (ui_->tabs->currentWidget() == ui_->tabImage)
         {
@@ -94,7 +96,7 @@ namespace rqt_turtle {
             drawImage();
         }
 
-        accept();
+        //accept();
     }
 
     void Draw::on_btnCancel_clicked()
@@ -209,19 +211,42 @@ namespace rqt_turtle {
 
     void Draw::drawImage()
     {
-        
-        auto turtle = turtles_[QString("turtle1")];
+        QVector<JobRunner*> runners;
+        turtlesim::Spawn spawn;
+        for (int i = 0; i < contours_.size(); ++i)
+        {
+            QString name = QString("t") + QString::number(i);
+            Turtle turtle(name.toStdString(), 0.0, 0.0, 0.0);
+            spawn.request.name = turtle.name_.c_str();
+            spawn.request.x = turtle.pose_.x;
+            spawn.request.y = turtle.pose_.y;
+            spawn.request.theta = turtle.pose_.theta;
+            ros::service::call<turtlesim::Spawn>("/spawn", spawn);
+            std::vector<std::vector<cv::Point> > contours(contours_.begin() + i, contours_.begin() + i + 1);
+            ROS_INFO("%d contour with %d points", contours.size(), contours[0].size());
+            JobRunner* runner = new JobRunner(turtle, contours, 500);
+            runners.push_back(runner);
+            // TODO implement progress correctly
+            connect(runner, SIGNAL(progress(int)), ui_task_->progressBar, SLOT(setValue(int)));
+            connect(ui_task_->btnCancel, SIGNAL(clicked()), runner, SLOT(kill()));
+        }
 
-        JobRunner* runner = new JobRunner(*turtle, contours_, 500);
-
-        connect(runner, SIGNAL(progress(int)), ui_task_->progressBar, SLOT(setValue(int)));
-        connect(ui_task_->btnCancel, SIGNAL(clicked()), runner, SLOT(kill()));
         connect(ui_task_->btnCancel, SIGNAL(clicked()), task_dialog_, SLOT(reject()));
         
-        threadpool_.start(runner);
+        ROS_INFO("Start runners");
+        for (auto runner : runners)
+        {
+            threadpool_.start(runner);
+        }
 
-        task_dialog_->open();
+        task_dialog_->exec();
     }
+
+
+    //void runnerProgress(int)
+    //{
+
+    //}
 
 
 
