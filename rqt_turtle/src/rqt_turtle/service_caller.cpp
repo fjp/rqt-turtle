@@ -30,7 +30,6 @@ namespace rqt_turtle {
         createTreeItems(service_name);
     }
 
-
     std::string ServiceCaller::exec_cmd(std::string str_cmd) 
     {
         const char* cmd = str_cmd.c_str();
@@ -45,7 +44,6 @@ namespace rqt_turtle {
         }
         return result;
     }
-
 
     void ServiceCaller::createTreeItems(std::string service_name)
     {
@@ -85,17 +83,8 @@ namespace rqt_turtle {
         accept();
     }
 
-
     QVariantMap ServiceCaller::getRequest()
     {
-        //return m_pUi->request_tree_widget;
-        //QList<QTreeWidgetItem*> clist = pRequestTreeWidget->findItems("name", Qt::MatchExactly|Qt::MatchRecursive, 0);
-        //foreach(QTreeWidgetItem* item, clist)
-        //{
-        //    ROS_INFO("output: %s", item->text(2).toStdString().c_str());
-        //}
-    
-        //QMap<QString, QVariant> map;
         QVariantMap map;
 
         // https://doc.qt.io/archives/qt-4.8/qtreewidgetitemiterator.html#details
@@ -107,11 +96,6 @@ namespace rqt_turtle {
             ++it;
         }
         return map;
-    }
-
-    QString ServiceCaller::getTurtleName()
-    {
-        return QString("Turtle2");
     }
 
 } // namespace
