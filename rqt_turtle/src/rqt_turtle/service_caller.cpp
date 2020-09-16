@@ -55,22 +55,18 @@ namespace rqt_turtle {
         std::string cmd_type = "rosservice type " + service_name;
         ROS_INFO("cmd_type: %s", cmd_type.c_str());
         std::string service_type = exec_cmd(cmd_type);
-        std::string cmd_info = "rosservice info " + service_name;
-        std::string service_info = exec_cmd(cmd_info);
-        QString qstr_service_info = QString::fromStdString(service_info);
-        QString qstr_args = "Args:";
-        int idx = qstr_service_info.indexOf(qstr_args);
-        // right(n) returns n rightmost characters, not characters after n.
-        QString service_args_line = qstr_service_info.right(qstr_service_info.size() - idx - qstr_args.size());
-        ROS_INFO("Service args: %s", service_args_line.toStdString().c_str());
-        QStringList qstrArgs = service_args_line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+        std::string cmd_args = "rosservice args " + service_name;
+        std::string service_args = exec_cmd(cmd_args);
+        QString qstr_service_args_line = QString::fromStdString(service_args);
+        ROS_INFO("Service args: %s", qstr_service_args_line.toStdString().c_str());
+        QStringList qstr_args = qstr_service_args_line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
 
         // https://doc.qt.io/qt-5/qtreewidget.html#details
         QList<QTreeWidgetItem *> items;
-        for (int i = 0; i < qstrArgs.size(); ++i)
+        for (int i = 0; i < qstr_args.size(); ++i)
         {
             QStringList i_args;
-            i_args.append(qstrArgs[i]);
+            i_args.append(qstr_args[i]);
             // TODO type
             i_args.append(QString::fromStdString("float32"));
             // TODO init value depending on type

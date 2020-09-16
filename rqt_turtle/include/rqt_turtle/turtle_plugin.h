@@ -35,6 +35,12 @@ namespace rqt_turtle {
          * @details All qt signal to slot connections are done here.
          */
         TurtlePlugin();
+
+        /**
+         * @brief Setup the plugin and the signal and slot connections.
+         * 
+         * @param context 
+         */
         virtual void initPlugin(qt_gui_cpp::PluginContext& context);
         virtual void shutdownPlugin();
         virtual void saveSettings(qt_gui_cpp::Settings& plugin_settings, qt_gui_cpp::Settings& instance_settings) const;
@@ -44,17 +50,21 @@ namespace rqt_turtle {
         //bool hasConfiguration() const;
         //void triggerConfiguration();
     private:
-        Ui::TurtlePluginWidget* m_pUi;
-        QWidget* m_pWidget;
+        /// Pointer to reference the main ui widgets of the turtle_plugin.ui
+        Ui::TurtlePluginWidget* ui_;
+        /// The main widget that will be used to setup the ui_
+        QWidget* widget_;
 
-        ServiceCaller* m_pServiceCaller;
+        /// Pointer to the ServiceCaller class dialog
+        ServiceCaller* service_caller_dialog_;
+        /// Pointer to the ServiceCaller class dialog
         Draw* draw_dialog_;
         
 
-        //std::string m_strSelectedTurtle;
+        /// Storing the currently selected turtles present in the treeTrutles QTreeWdiget.
         QVector<QString> selected_turtles_;
 
-        // Vector to keep track of all turtles (keep turtles on the heap using vector of shared pointers)
+        /// Vector to keep track of all turtles (keep turtles on the heap using vector of shared pointers)
         QMap<QString, QSharedPointer<Turtle> > turtles_;
 
 
@@ -149,7 +159,7 @@ namespace rqt_turtle {
          * @brief Keeps track of the slected turtles
          * 
          * @details When selecting different turtles in the QTreeWidget,
-         * the member storing the selected turtles is updated.
+         * the member selected_turtles_ storing the selected turtles is updated.
          * 
          */
         void on_selection_changed();

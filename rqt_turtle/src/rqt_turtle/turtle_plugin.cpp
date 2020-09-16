@@ -26,42 +26,37 @@ namespace rqt_turtle {
 
     TurtlePlugin::TurtlePlugin()
         : rqt_gui_cpp::Plugin()
-        , m_pUi(new Ui::TurtlePluginWidget)
-        , m_pWidget(0)
+        , ui_(new Ui::TurtlePluginWidget)
+        , widget_(0)
     {
         // Constructor is called first before initPlugin function, needless to say.
 
         // give QObjects reasonable names
         setObjectName("TurtlePlugin");
-
-        //m_pServiceCaller = new ServiceCaller(m_pWidget);
-
-        
     }
 
     void TurtlePlugin::initPlugin(qt_gui_cpp::PluginContext& context)
     {
+        ROS_INFO("Init rqt_turtle plugin");
         // access standalone command line arguments
         QStringList argv = context.argv();
         // create QWidget
-        m_pWidget = new QWidget();
+        widget_ = new QWidget();
         // extend the widget with all attributes and children from UI file
-        //m_pUi.setupUi(widget_);
-        ROS_INFO("Init rqt_turtle plugin");
-        m_pUi->setupUi(m_pWidget);
+        ui_->setupUi(widget_);
         // add widget to the user interface
-        context.addWidget(m_pWidget);
+        context.addWidget(widget_);
 
-        connect(m_pUi->btnReset, SIGNAL(clicked()), this, SLOT(on_btnReset_clicked()));
-        connect(m_pUi->btnSpawn, SIGNAL(clicked()), this, SLOT(on_btnSpawn_clicked()));
-        connect(m_pUi->btnKill, SIGNAL(clicked()), this, SLOT(on_btnKill_clicked()));
-        connect(m_pUi->btnColor, SIGNAL(clicked()), this, SLOT(on_btnColor_clicked()));
-        connect(m_pUi->btnDraw, SIGNAL(clicked()), this, SLOT(on_btnDraw_clicked()));
-        connect(m_pUi->btnTeleportAbs, SIGNAL(clicked()), this, SLOT(on_btnTeleportAbs_clicked()));
-        connect(m_pUi->btnTeleportRel, SIGNAL(clicked()), this, SLOT(on_btnTeleportRel_clicked()));
-        connect(m_pUi->btnTogglePen, SIGNAL(clicked()), this, SLOT(on_btnTogglePen_clicked()));
+        connect(ui_->btnReset, SIGNAL(clicked()), this, SLOT(on_btnReset_clicked()));
+        connect(ui_->btnSpawn, SIGNAL(clicked()), this, SLOT(on_btnSpawn_clicked()));
+        connect(ui_->btnKill, SIGNAL(clicked()), this, SLOT(on_btnKill_clicked()));
+        connect(ui_->btnColor, SIGNAL(clicked()), this, SLOT(on_btnColor_clicked()));
+        connect(ui_->btnDraw, SIGNAL(clicked()), this, SLOT(on_btnDraw_clicked()));
+        connect(ui_->btnTeleportAbs, SIGNAL(clicked()), this, SLOT(on_btnTeleportAbs_clicked()));
+        connect(ui_->btnTeleportRel, SIGNAL(clicked()), this, SLOT(on_btnTeleportRel_clicked()));
+        connect(ui_->btnTogglePen, SIGNAL(clicked()), this, SLOT(on_btnTogglePen_clicked()));
 
-        connect(m_pUi->treeTurtles, SIGNAL(itemSelectionChanged()), 
+        connect(ui_->treeTurtles, SIGNAL(itemSelectionChanged()), 
                 this, SLOT(on_selection_changed()));
 
         updateTurtleTree();
@@ -91,7 +86,7 @@ namespace rqt_turtle {
                 turtlesim::PoseConstPtr pose = ros::topic::waitForMessage<turtlesim::Pose>(topic_name.toStdString());
                 ROS_INFO("Pose received: x: %f, y: %f, theta: %f", pose->x, pose->y, pose->theta);
 
-                // Create new turtle in turtle vector
+                // Create new turtle in turtle map
                 // Note: assume that the pen is toggled on
                 QSharedPointer<Turtle> turtle = QSharedPointer<Turtle>(new Turtle(turtle_name, *pose));
                 turtles_[QString::fromStdString(turtle_name)] = turtle;
@@ -101,7 +96,7 @@ namespace rqt_turtle {
         // Insert the turtles into the QTreeWidget
         for (auto turtle : turtles_)
         {
-            m_pUi->treeTurtles->insertTopLevelItem(0, turtle->toTreeItem(m_pUi->treeTurtles));
+            ui_->treeTurtles->insertTopLevelItem(0, turtle->toTreeItem(ui_->treeTurtles));
         }
     }
 
@@ -139,7 +134,7 @@ namespace rqt_turtle {
         ros::service::call<std_srvs::Empty>("reset", empty);
 
         // Clear the QTreeWidget
-        m_pUi->treeTurtles->clear();
+        ui_->treeTurtles->clear();
         turtles_.clear();
 
         updateTurtleTree();
@@ -149,47 +144,52 @@ namespace rqt_turtle {
     {
         ROS_DEBUG("Spawn clicked");
         std::string service_name = "/spawn";
-        m_pServiceCaller = new ServiceCaller(m_pWidget, service_name);
+        service_caller_dialog_ = new ServiceCaller(widget_, service_name);
 
-        QString qstrTurtleName;
+        QString qstr_turtle_name;
         QVariantMap request;
-        bool ok = m_pServiceCaller->exec() == QDialog::Accepted;
+        bool ok = service_caller_dialog_->exec() == QDialog::Accepted;
         if (ok)
         {
             ROS_INFO("accepted");
-            request = m_pServiceCaller->getRequest();
-            qstrTurtleName = request["name"].toString();
+            request = service_caller_dialog_->getRequest();
+            qstr_turtle_name = request["name"].toString();
         }
 
-        if (!ok || qstrTurtleName.isEmpty())
+        if (!ok || qstr_turtle_name.isEmpty())
         {
             ROS_INFO("Closed Service Caller Dialog or Turtle Name empty.");
             return;
         }
-        auto existingTurtles = m_pUi->treeTurtles->findItems(qstrTurtleName, Qt::MatchExactly);
-        const char * strTurtleName = qstrTurtleName.toStdString().c_str();
-        if (existingTurtles.size() > 0)
+        auto existing_turtles = ui_->treeTurtles->findItems(qstr_turtle_name, Qt::MatchExactly);
+        const char * str_turtle_name = qstr_turtle_name.toStdString().c_str();
+        if (existing_turtles.size() > 0)
         {
-            ROS_INFO("Turtle with the name \"%s\" already exists.", strTurtleName);
+            ROS_INFO("Turtle with the name \"%s\" already exists.", str_turtle_name);
             return;
         }
 
-        ROS_INFO("Spawn turtle: %s.", strTurtleName);
+        ROS_INFO("Spawn turtle: %s.", str_turtle_name);
         turtlesim::Spawn spawn;
         spawn.request.x = request["x"].toString().toFloat();
         spawn.request.y = request["y"].toString().toFloat();
         spawn.request.theta = request["theta"].toFloat();
         spawn.request.name = request["name"].toString().toStdString().c_str();
         ros::service::call<turtlesim::Spawn>("spawn", spawn);
-        //m_pUi->tableTurtles->addItems(QStringList(qstrTurtleName));
 
-        QTreeWidgetItem *item = new QTreeWidgetItem(m_pUi->treeTurtles);
-        item->setText(0, qstrTurtleName); // Column 0 name
+        QTreeWidgetItem *item = new QTreeWidgetItem(ui_->treeTurtles);
+        item->setText(0, qstr_turtle_name); // Column 0 name
         item->setText(1, request["x"].toString()); // Column 1 x
         item->setText(2, request["y"].toString()); // Column 2 y
         item->setText(3, request["theta"].toString()); // Column 3 theta
         item->setText(4, QString("on")); // Column 4 pen on/off (pen is always on by default)
-        m_pUi->treeTurtles->insertTopLevelItem(0, item);
+        ui_->treeTurtles->insertTopLevelItem(0, item);
+
+        // Create new turtle in turtle map
+        // Note: assume that the pen is toggled on
+        QSharedPointer<Turtle> turtle = QSharedPointer<Turtle>(new Turtle(qstr_turtle_name.toStdString(), 
+                                                        spawn.request.x, spawn.request.y, spawn.request.theta));
+        turtles_[qstr_turtle_name] = turtle;
     }
 
     void TurtlePlugin::on_btnColor_clicked()
@@ -208,11 +208,13 @@ namespace rqt_turtle {
         ros::param::set("/turtlesim/background_r", r);
 
         // Note: this will not set the color (only after reset is called)
+        std_srvs::Empty reset;
+        ros::service::call("/clear", reset);
     }
 
     void TurtlePlugin::on_btnDraw_clicked()
     {
-        draw_dialog_ = new Draw(m_pWidget, turtles_);
+        draw_dialog_ = new Draw(widget_, turtles_);
 
         draw_dialog_->setTurtleWorkers(selected_turtles_);
 
@@ -250,7 +252,7 @@ namespace rqt_turtle {
             ros::service::call<turtlesim::Kill>("kill", kill);
 
             // remove turtle from tree widget
-            QList<QTreeWidgetItem*> list = m_pUi->treeTurtles->findItems(selected_turtle, Qt::MatchExactly);
+            QList<QTreeWidgetItem*> list = ui_->treeTurtles->findItems(selected_turtle, Qt::MatchExactly);
             for (auto item : list)
             {
                 // Remove turtle from turtles_ QMap
@@ -258,8 +260,6 @@ namespace rqt_turtle {
                 // Remove the turtle from the QTreeWidget treeTurle
                 delete item;
             }
-            
-            //m_pUi->treeTurtles->addItems(QStringList(qstrTurtleName));
         }
     }
 
@@ -340,16 +340,15 @@ namespace rqt_turtle {
 
     QVariantMap TurtlePlugin::teleport(std::string strServiceName)
     {
-        
-        m_pServiceCaller = new ServiceCaller(m_pWidget, strServiceName);
+        service_caller_dialog_ = new ServiceCaller(widget_, strServiceName);
 
         QString qstrTurtleName;
         QVariantMap request;
-        bool ok = m_pServiceCaller->exec() == QDialog::Accepted;
+        bool ok = service_caller_dialog_->exec() == QDialog::Accepted;
         if (ok)
         {
             ROS_DEBUG("accepted");
-            request = m_pServiceCaller->getRequest();
+            request = service_caller_dialog_->getRequest();
             qstrTurtleName = request["name"].toString();
         }
         else
@@ -405,7 +404,7 @@ namespace rqt_turtle {
     {
         //auto current = m_pUi->treeTurtles->currentItem(); // TODO use member list if multiple turtles are selected
         // Get list of selected turtles
-        auto selected_items = m_pUi->treeTurtles->selectedItems();
+        auto selected_items = ui_->treeTurtles->selectedItems();
         selected_turtles_.clear();
         if (selected_items.empty())
         {
