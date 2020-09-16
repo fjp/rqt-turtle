@@ -16,7 +16,7 @@
 
 namespace rqt_turtle {
 
-    class WorkerKilledException{};
+    class ImageWorkerKilledException{};
 
 
     class JobRunner : public QObject, public QRunnable

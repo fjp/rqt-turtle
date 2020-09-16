@@ -15,7 +15,8 @@
 #include "ui_Task.h"
 
 
-#include <rqt_turtle/worker.h>
+#include <rqt_turtle/action_worker.h>
+#include <rqt_turtle/image_worker.h>
 
 
 
@@ -27,6 +28,7 @@ namespace rqt_turtle {
         , draw_dialog_(this)
         , task_dialog_(new QDialog(this))
         , ac_("turtle_shape", true)
+        , cancel_goal_(false)
         , turtles_(turtles)
     {
         // give QObjects reasonable names
@@ -88,14 +90,12 @@ namespace rqt_turtle {
         {
             ROS_INFO("Draw Shape");
             drawShape();
-            accept();
         }
         if (ui_->tabs->currentWidget() == ui_->tabImage)
         {
             ROS_INFO("Draw Image");
             drawImage();
         }
-
         //accept();
     }
 
@@ -223,7 +223,7 @@ namespace rqt_turtle {
             spawn.request.theta = turtle.pose_.theta;
             ros::service::call<turtlesim::Spawn>("/spawn", spawn);
             std::vector<std::vector<cv::Point> > contours(contours_.begin() + i, contours_.begin() + i + 1);
-            ROS_INFO("%d contour with %d points", contours.size(), contours[0].size());
+            ROS_INFO("%d contour with %d points", (int)contours.size(), (int)contours[0].size());
             JobRunner* runner = new JobRunner(turtle, contours, 500);
             runners.push_back(runner);
             // TODO implement progress correctly
@@ -278,32 +278,34 @@ namespace rqt_turtle {
                 return;
             }
         }
-        
-        // wait for the action server to start
+
+        /// Wait for the action server to start
         ac_.waitForServer(); //will wait for infinite time
-
         ROS_INFO("Action server started, sending goal.");
-        // send a goal to the action
-        turtle_actionlib::ShapeGoal shape;
-        shape.edges = ui_->lineEditEdges->text().toInt();
-        shape.radius = ui_->lineEditEdges->text().toFloat();
-        ac_.sendGoal(shape);
 
-        //wait for the action to return
+        /// Create ActionWorker which will send a goal to the action server
+        int edges = ui_->lineEditEdges->text().toInt();
+        float radius = ui_->lineEditRadius->text().toFloat();
+        ActionWorker* action_worker = new ActionWorker(ac_, edges, radius);
+
+        /// Cancel action if it takes too long
         float timeout = ui_->lineEditTimeout->text().toFloat();
-        bool finished_before_timeout = ac_.waitForResult(ros::Duration(timeout));
+        //ros::Time end = ros::Time::now() + ros::Duration(timeout);
+        //ac_.cancelGoalsAtAndBeforeTime(end);
 
+        ui_->btnDraw->setText(QString("Cancel Goal"));
+        disconnect(ui_->btnDraw, SIGNAL(clicked()), this, SLOT(on_btnDraw_clicked()));
+        connect(ui_->btnDraw, SIGNAL(clicked()), action_worker, SLOT(kill()));
+        connect(ui_->btnDraw, SIGNAL(clicked()), this, SLOT(on_btnCancelGoal_clicked()));
+        
+        threadpool_.start(action_worker);
+    }
 
-        if (finished_before_timeout)
-        {
-            actionlib::SimpleClientGoalState state = ac_.getState();
-            ROS_INFO("Action finished: %s",state.toString().c_str());
-        }
-        else
-            ROS_INFO("Action did not finish before the time out.");
-
-        //exit
-        return; // TODO fix
+    void Draw::on_btnCancelGoal_clicked()
+    {
+        ui_->btnDraw->setText("Draw");
+        disconnect(ui_->btnDraw, SIGNAL(clicked()), this, SLOT(on_btnCancelGoal_clicked()));
+        connect(ui_->btnDraw, SIGNAL(clicked()), this, SLOT(on_btnDraw_clicked()));
     }
 
 

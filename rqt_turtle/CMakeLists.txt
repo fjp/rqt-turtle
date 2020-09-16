@@ -114,7 +114,8 @@ set(rqt_turtle_SRCS
   src/rqt_turtle/service_caller.cpp
   src/rqt_turtle/draw.cpp
   src/rqt_turtle/turtle.cpp
-  src/rqt_turtle/worker.cpp
+  src/rqt_turtle/action_worker.cpp
+  src/rqt_turtle/image_worker.cpp
 )
 
 set(rqt_turtle_HDRS
@@ -122,7 +123,8 @@ set(rqt_turtle_HDRS
   include/rqt_turtle/service_caller.h
   include/rqt_turtle/draw.h
   include/rqt_turtle/turtle.h
-  include/rqt_turtle/worker.h
+  include/rqt_turtle/action_worker.h
+  include/rqt_turtle/image_worker.h
 )
 
 set(rqt_turtle_UIS

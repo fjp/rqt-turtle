@@ -1,4 +1,4 @@
-#include <rqt_turtle/worker.h>
+#include <rqt_turtle/image_worker.h>
 
 namespace rqt_turtle {
 
@@ -40,7 +40,7 @@ namespace rqt_turtle {
 
                     if (is_killed_)
                     {
-                        throw WorkerKilledException();
+                        throw ImageWorkerKilledException();
                     }
 
                     ros::service::call<turtlesim::TeleportAbsolute>("/" + turtle_.name_ + "/teleport_absolute", sTeleportAbs_);
@@ -54,7 +54,7 @@ namespace rqt_turtle {
         }
         catch (...)
         {
-            ROS_INFO("Killed Worker %s", turtle_.name_.c_str());
+            ROS_INFO("Killed ImageWorker %s", turtle_.name_.c_str());
         }
     }
 

@@ -53,6 +53,7 @@ namespace rqt_turtle {
         // true causes the client to spin its own thread
         // http://docs.ros.org/noetic/api/actionlib/html/classactionlib_1_1SimpleActionClient.html
         actionlib::SimpleActionClient<turtle_actionlib::ShapeAction> ac_;
+        bool cancel_goal_;
 
         QThreadPool threadpool_;
 
@@ -72,6 +73,8 @@ namespace rqt_turtle {
         void on_btnCancel_clicked();
 
         void on_btnOpen_clicked();
+
+        void on_btnCancelGoal_clicked();
 
         void on_sliderLowThreshold_valueChanged(int low_threshold);
     };
