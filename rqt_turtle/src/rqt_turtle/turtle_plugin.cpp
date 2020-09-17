@@ -380,7 +380,16 @@ namespace rqt_turtle {
                 turtle->setPen(true);
             }
             
-            ROS_INFO("Set pen for turtle %s: %s", turtle->name_.c_str(), turtle->pen_.off ? "Off" : "On");
+            QString qstr_pen_state = turtle->pen_.off ? QString("Off") : QString("On");
+            ROS_INFO("Set pen for turtle %s: %s", turtle->name_.c_str(), qstr_pen_state.toStdString().c_str());
+
+            QList<QTreeWidgetItem*> list = ui_->treeTurtles->findItems(selected_turtle, Qt::MatchExactly);
+            /// Note this will always be a list of one element
+            for (auto item : list)
+            {
+                // Update pen in treeTurtles QTeeWidget
+                item->setText(4, qstr_pen_state);
+            }
         }
     }
 
