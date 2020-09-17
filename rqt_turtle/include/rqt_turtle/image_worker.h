@@ -28,6 +28,7 @@ namespace rqt_turtle {
         Turtle turtle_;
         std::vector<std::vector<cv::Point> > contours_;
         int num_contours_;
+        int num_points_;
         int idx_contour_;
         int idx_point_;
         int percent_;
@@ -42,7 +43,8 @@ namespace rqt_turtle {
         void run() override;
 
     signals:
-        void progress(int value);
+        void progress(QString name, int value);
+        void finished(QString name);
 
     public slots:
         void kill();

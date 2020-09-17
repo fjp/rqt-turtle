@@ -144,7 +144,7 @@ namespace rqt_turtle {
     {
         ROS_DEBUG("Spawn clicked");
         std::string service_name = "/spawn";
-        service_caller_dialog_ = new ServiceCaller(widget_, service_name);
+        service_caller_dialog_ = QSharedPointer<ServiceCaller>(new ServiceCaller(widget_, service_name));
 
         QString qstr_turtle_name;
         QVariantMap request;
@@ -214,9 +214,7 @@ namespace rqt_turtle {
 
     void TurtlePlugin::on_btnDraw_clicked()
     {
-        draw_dialog_ = new Draw(widget_, turtles_);
-
-        draw_dialog_->setTurtleWorkers(selected_turtles_);
+        draw_dialog_ = QSharedPointer<Draw>(new Draw(widget_, turtles_));
 
         draw_dialog_->open();
         //bool ok = draw_dialog_->exec() == QDialog::Accepted;
@@ -340,7 +338,7 @@ namespace rqt_turtle {
 
     QVariantMap TurtlePlugin::teleport(std::string strServiceName)
     {
-        service_caller_dialog_ = new ServiceCaller(widget_, strServiceName);
+        service_caller_dialog_ = QSharedPointer<ServiceCaller>(new ServiceCaller(widget_, strServiceName));
 
         QString qstrTurtleName;
         QVariantMap request;

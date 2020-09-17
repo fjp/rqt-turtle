@@ -9,6 +9,11 @@ namespace rqt_turtle {
 
         contours_ = contours;
         num_contours_ = contours.size();
+        num_points_ = 0;
+        for (auto contour : contours_)
+        {
+            num_points_ += contour.size();
+        }
         idx_contour_ = 0;
         idx_point_ = 0;
         percent_ = 0;
@@ -20,16 +25,16 @@ namespace rqt_turtle {
     {
         try
         {
+            idx_point_ = 0;
             ROS_INFO("%s draws %d contours", turtle_.name_.c_str(), num_contours_);
             for (auto contour : contours_)
             {
                 ROS_INFO("%s draws contour %d of %d", turtle_.name_.c_str(), idx_contour_, num_contours_);
                 turtle_.setPen(true);
-                idx_point_ = 0;
                 for (auto point : contour)
                 {
-                    percent_ = (float)idx_contour_ / (float)num_contours_ * 100.0;
-                    emit progress(percent_);
+                    percent_ = (int)(100.0 * (float)(idx_point_+1) / (float)num_points_);
+                    emit progress(QString::fromStdString(turtle_.name_), percent_);
 
                     /// Normalize to turtle coordinates and flip on horizontal axis
                     sTeleportAbs_.request.x = point.x / turtlesim_size_ * 11.0;
@@ -49,13 +54,14 @@ namespace rqt_turtle {
 
                     idx_point_++;
                 }
-                idx_contour_++;
             }
         }
         catch (...)
         {
             ROS_INFO("Killed ImageWorker %s", turtle_.name_.c_str());
         }
+
+        emit finished(QString::fromStdString(turtle_.name_));
     }
 
     void JobRunner::kill()

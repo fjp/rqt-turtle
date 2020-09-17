@@ -25,11 +25,12 @@ namespace rqt_turtle {
         actionlib::SimpleActionClient<turtle_actionlib::ShapeAction>& ac_;
         int edges_;
         float radius_;
+        float timeout_;
 
         bool is_killed_;
 
     public:
-        ActionWorker(actionlib::SimpleActionClient<turtle_actionlib::ShapeAction>& ac, int edges, float radius);
+        ActionWorker(actionlib::SimpleActionClient<turtle_actionlib::ShapeAction>& ac, int edges, float radius, float timeout);
 
 
         void run() override;

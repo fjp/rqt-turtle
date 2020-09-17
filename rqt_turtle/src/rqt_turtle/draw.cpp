@@ -4,9 +4,11 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QImageReader>
+#include <QTimer>
 
 #include <turtlesim/TeleportAbsolute.h>
 #include <turtlesim/Spawn.h>
+#include <turtlesim/Kill.h>
 
 // ROS releated headers
 
@@ -44,13 +46,6 @@ namespace rqt_turtle {
         //connect(ui_->btnOpen, SIGNAL(clicked()), this, SLOT(on_btnOpen_clicked()));
 
         turtlesim_size_ = 500.0;
-    }
-
-    void Draw::setTurtleWorkers(QVector<QString> turtle_workers)
-    {
-        /// Fill list with selected turtles which will be used as workers
-        turtle_workers_ = turtle_workers;
-        ui_->listWorkers->addItems(turtle_workers.toList());
     }
 
     // https://stackoverflow.com/questions/28562401/resize-an-image-to-a-square-but-keep-aspect-ratio-c-opencv
@@ -95,6 +90,7 @@ namespace rqt_turtle {
         {
             ROS_INFO("Draw Image");
             drawImage();
+            accept();
         }
         //accept();
     }
@@ -211,11 +207,14 @@ namespace rqt_turtle {
 
     void Draw::drawImage()
     {
+        image_worker_progress_.clear();
         QVector<JobRunner*> runners;
         turtlesim::Spawn spawn;
+        QStringList names;
         for (int i = 0; i < contours_.size(); ++i)
         {
             QString name = QString("t") + QString::number(i);
+            names.push_back(name);
             Turtle turtle(name.toStdString(), 0.0, 0.0, 0.0);
             spawn.request.name = turtle.name_.c_str();
             spawn.request.x = turtle.pose_.x;
@@ -227,11 +226,13 @@ namespace rqt_turtle {
             JobRunner* runner = new JobRunner(turtle, contours, 500);
             runners.push_back(runner);
             // TODO implement progress correctly
-            connect(runner, SIGNAL(progress(int)), ui_task_->progressBar, SLOT(setValue(int)));
+            connect(runner, SIGNAL(progress(QString, int)), this, SLOT(update_image_progress(QString, int)));
+            connect(runner, SIGNAL(finished(QString)), this, SLOT(cleanup_image_workers(QString)));
             connect(ui_task_->btnCancel, SIGNAL(clicked()), runner, SLOT(kill()));
         }
 
         connect(ui_task_->btnCancel, SIGNAL(clicked()), task_dialog_, SLOT(reject()));
+        connect(ui_task_->btnCancel, SIGNAL(clicked()), this, SLOT(cancelDrawImage()));
         
         ROS_INFO("Start runners");
         for (auto runner : runners)
@@ -239,16 +240,71 @@ namespace rqt_turtle {
             threadpool_.start(runner);
         }
 
+        timer_ = QSharedPointer<QTimer>(new QTimer(this)); 
+        timer_->setInterval(100);
+        connect(timer_.data(), SIGNAL(timeout()), this, SLOT(refresh_progress()));
+        timer_->start();
+
         task_dialog_->exec();
     }
 
 
-    //void runnerProgress(int)
-    //{
+    void Draw::update_image_progress(QString name, int progress)
+    {
+        ROS_INFO("Update image progress of %s: %d", name.toStdString().c_str(), progress);
+        image_worker_progress_[name] = progress;
+    }
 
-    //}
+    int Draw::calculate_progress()
+    { 
+        if (image_worker_progress_.isEmpty())
+        {
+            return 0;
+        }
+        
+        auto values = image_worker_progress_.values();
+        int sum = 0;
+        for (auto value : values)
+        {
+            sum += value;
+        }
+        int progress = (float)sum / (float)image_worker_progress_.size();
+        return progress;
+    }
 
+    void Draw::refresh_progress()
+    {
+        //# Calculate total progress.
+        int progress = calculate_progress();
+        ROS_INFO("Refresh progress: %d", progress);
+        ui_task_->progressBar->setValue(progress);
+        ui_task_->label->setText(QString("%1 workers").arg(image_worker_progress_.size()));
+    }
 
+    void Draw::cleanup_image_workers(QString name)
+    {
+        auto values = image_worker_progress_.values();
+        if (std::all_of(values.constBegin(), values.constEnd(), [](int value){ return 100 == value; }))
+        {
+            // Update the progress bar if we've removed a value. 
+            //refresh_progress();
+            task_dialog_->accept();
+            cancelDrawImage();
+            image_worker_progress_.clear(); // Empty the map.
+        }
+    }
+
+    void Draw::cancelDrawImage()
+    {
+        timer_->stop();
+        auto names = image_worker_progress_.keys();
+        for (auto name : names)
+        {
+            turtlesim::Kill kill;
+            kill.request.name = name.toStdString();
+            ros::service::call("kill", kill);
+        }
+    }
 
     void Draw::cannyThreshold(int low_threshold)
     {
@@ -286,12 +342,8 @@ namespace rqt_turtle {
         /// Create ActionWorker which will send a goal to the action server
         int edges = ui_->lineEditEdges->text().toInt();
         float radius = ui_->lineEditRadius->text().toFloat();
-        ActionWorker* action_worker = new ActionWorker(ac_, edges, radius);
-
-        /// Cancel action if it takes too long
         float timeout = ui_->lineEditTimeout->text().toFloat();
-        //ros::Time end = ros::Time::now() + ros::Duration(timeout);
-        //ac_.cancelGoalsAtAndBeforeTime(end);
+        ActionWorker* action_worker = new ActionWorker(ac_, edges, radius, timeout);
 
         ui_->btnDraw->setText(QString("Cancel Goal"));
         disconnect(ui_->btnDraw, SIGNAL(clicked()), this, SLOT(on_btnDraw_clicked()));

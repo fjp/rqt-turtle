@@ -56,9 +56,9 @@ namespace rqt_turtle {
         QWidget* widget_;
 
         /// Pointer to the ServiceCaller class dialog
-        ServiceCaller* service_caller_dialog_;
+        QSharedPointer<ServiceCaller> service_caller_dialog_;
         /// Pointer to the ServiceCaller class dialog
-        Draw* draw_dialog_;
+        QSharedPointer<Draw> draw_dialog_;
         
 
         /// Storing the currently selected turtles present in the treeTrutles QTreeWdiget.
