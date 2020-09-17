@@ -6,6 +6,10 @@
 
 To learn how the package was created, please read the [documentation](https://fjp.at/ros/turtle-pong).
 
+The video below gives more insights on what is currently implemented:
+
+[![rqt turtle YouTube](http://img.youtube.com/vi/2IQtxEmP2a4/0.jpg)](https://youtu.be/2IQtxEmP2a4)
+
 
 ## Launch
 
