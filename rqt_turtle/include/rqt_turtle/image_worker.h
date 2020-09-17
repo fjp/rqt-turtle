@@ -1,5 +1,5 @@
-#ifndef rqt_turtle__worker_H
-#define rqt_turtle__worker_H
+#ifndef rqt_turtle__image_worker_H
+#define rqt_turtle__image_worker_H
 
 //import sys 
 //import time
@@ -19,7 +19,7 @@ namespace rqt_turtle {
     class ImageWorkerKilledException{};
 
 
-    class JobRunner : public QObject, public QRunnable
+    class ImageWorker : public QObject, public QRunnable
     {
         Q_OBJECT
 
@@ -37,7 +37,7 @@ namespace rqt_turtle {
         turtlesim::TeleportAbsolute sTeleportAbs_;
 
     public:
-        JobRunner(Turtle turtle, std::vector<std::vector<cv::Point> > contours, float turtlesim_size = 500.0);
+        ImageWorker(Turtle turtle, std::vector<std::vector<cv::Point> > contours, float turtlesim_size = 500.0);
 
 
         void run() override;
@@ -52,4 +52,4 @@ namespace rqt_turtle {
 
 }
 
-#endif // rqt_turtle__worker_H
+#endif // rqt_turtle__image_worker_H

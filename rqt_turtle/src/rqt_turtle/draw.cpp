@@ -208,7 +208,7 @@ namespace rqt_turtle {
     void Draw::drawImage()
     {
         image_worker_progress_.clear();
-        QVector<JobRunner*> runners;
+        QVector<ImageWorker*> runners;
         turtlesim::Spawn spawn;
         QStringList names;
         for (int i = 0; i < contours_.size(); ++i)
@@ -223,7 +223,7 @@ namespace rqt_turtle {
             ros::service::call<turtlesim::Spawn>("/spawn", spawn);
             std::vector<std::vector<cv::Point> > contours(contours_.begin() + i, contours_.begin() + i + 1);
             ROS_INFO("%d contour with %d points", (int)contours.size(), (int)contours[0].size());
-            JobRunner* runner = new JobRunner(turtle, contours, 500);
+            ImageWorker* runner = new ImageWorker(turtle, contours, 500);
             runners.push_back(runner);
             // TODO implement progress correctly
             connect(runner, SIGNAL(progress(QString, int)), this, SLOT(update_image_progress(QString, int)));

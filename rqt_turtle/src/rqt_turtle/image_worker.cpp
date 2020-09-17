@@ -2,7 +2,7 @@
 
 namespace rqt_turtle {
 
-    JobRunner::JobRunner(Turtle turtle, std::vector<std::vector<cv::Point> > contours, float turtlesim_size)
+    ImageWorker::ImageWorker(Turtle turtle, std::vector<std::vector<cv::Point> > contours, float turtlesim_size)
         : turtle_(turtle)
     {
         is_killed_ = false;
@@ -21,7 +21,7 @@ namespace rqt_turtle {
         turtlesim_size_ = turtlesim_size;
     }
 
-    void JobRunner::run()
+    void ImageWorker::run()
     {
         try
         {
@@ -64,7 +64,7 @@ namespace rqt_turtle {
         emit finished(QString::fromStdString(turtle_.name_));
     }
 
-    void JobRunner::kill()
+    void ImageWorker::kill()
     {
         ROS_INFO("Kill received");
         is_killed_ = true;
